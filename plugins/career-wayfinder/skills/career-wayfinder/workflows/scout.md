@@ -15,7 +15,7 @@ Tell her in one line what you're about to explore and roughly how long it takes 
 
 ## Brief and launch
 
-Read `references/research-rules.md`. For each target, start a **scout** agent in parallel (one industry per agent, at most five at once). Each brief must include:
+Read `references/research-rules.md`. For each target, start a **scout** agent (one industry per agent, at most three at once; the scouts run on a small, fast model to save her usage). Each brief must include:
 
 - the industry (name, id, blurb) or "wildcard discovery";
 - her conditions from `About Me/compass.md` (location, setting, don't-wants) and her profile in three lines (degree, core skills), with no other personal details;

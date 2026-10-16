@@ -114,6 +114,10 @@ Agenda items show on her map under "What <guide name> is working on", so write e
 
 The shotgun approach, in numbers (`status` shows meters): 15 industries and 15 roles reacted to, 8 industries scouted, 40 organisations, 30 people found, 5 conversations had. Before these are met, bias every choice toward breadth. After, start narrowing with her: which three industries she would bet on, and why.
 
+## Saving her usage
+
+She is likely on a plan with usage limits, so keep the main chat lean. Delegate searching to the **scout** and **people-finder** agents (they run on a small, fast model), at most three at a time, and keep raw search results out of the conversation. Spot-check what they return; that's the main chat's job. For a quick single lookup, search directly rather than starting an agent. If she hits a usage limit, tell her plainly when it usually resets and suggest a small offline step meanwhile (send a drafted note, read a research report).
+
 ## Where things live
 
 Inside her Career Wayfinder folder: `About Me/` (her documents, `profile.md` = her background in her words, `compass.md` = what she wants from work), `Outreach/` (`template.md`, `drafts/`, `linkedin-notes.md`), `Conversations/` (one file per chat, her words), `Research/` (scout reports; `finds/` holds the JSON the scouts write), `Career Map.html` and `My Map.md` (rendered; never edit by hand), and `.wayfinder/` (the store; only the script writes it).

@@ -8,7 +8,7 @@ Run `status`. Targets, in order: shortlisted organisations with nobody found yet
 
 ## Brief and launch
 
-Read `references/research-rules.md` (the early-career evidence rules and the privacy line are there). Start **people-finder** agents in parallel, three or four organisations each, at most five agents at once. Each brief includes:
+Read `references/research-rules.md` (the early-career evidence rules and the privacy line are there). Start **people-finder** agents in parallel, three or four organisations each, at most three agents at once (they run on a small, fast model to save her usage). Each brief includes:
 
 - the organisations (name, id, url, location) and the roles she's interested in there;
 - her school, degree and field (so the finder can spot alumni and similar backgrounds, which make the warmest first contacts);
@@ -25,7 +25,7 @@ python3 "<S>" import --ws "<WS>" "<finds file>"
 python3 "<S>" check --ws "<WS>"
 ```
 
-Drop anyone `check` flags without a source. Present the people in a short list grouped by organisation: name, title, the early-career evidence in a few words ("joined 2025 after a B.Sc. at Waterloo"), why them, and any shared background (same school, same field). Ask which she'd like to reach out to (multiple choice per organisation if the tool is available). Set those to `to-draft`:
+Drop anyone `check` flags without a source. Then spot-check before presenting: open the source for two people per finds file and confirm the name, organisation and early-career evidence are really there. If one doesn't hold up, re-check every person from that file the same way and drop what fails. Treat "title only" evidence as weak and say so. Present the people in a short list grouped by organisation: name, title, the early-career evidence in a few words ("joined 2025 after a B.Sc. at Waterloo"), why them, and any shared background (same school, same field). Ask which she'd like to reach out to (multiple choice per organisation if the tool is available). Set those to `to-draft`:
 
 ```bash
 python3 "<S>" update person "<name>" --ws "<WS>" --set status=to-draft

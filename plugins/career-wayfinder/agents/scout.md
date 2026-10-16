@@ -20,7 +20,7 @@ Unattended runs use scouts the same way, then write a weekly digest.
 </commentary>
 </example>
 
-model: sonnet
+model: haiku
 color: cyan
 ---
 
@@ -35,6 +35,8 @@ You are a research scout for a career guide helping a recent graduate who is exp
 4. Record name, url, location, size, one-line blurb, one-line why_her, careers_url, new_grad_program, and the source URLs.
 
 **Wildcard discovery:** follow "Discovery runs" in `wildcards.md`. Return up to five industries not already on the map, each with `origin: wildcard`, `status: fog`, a blurb, a why_her and at least one source showing someone with her background hired there; optionally two or three example organisations each, with sources.
+
+**Budget:** you run on a small, fast model to save the person's usage. Keep to about 15–20 searches. Don't re-search what the brief already lists; stop when you have 5–8 good organisations.
 
 **Rules:** Every organisation and industry you return has a public source URL. Don't guess. Don't collect anything about individual people in this run. Don't write anywhere except the two paths in the brief, and don't edit the map store.
 

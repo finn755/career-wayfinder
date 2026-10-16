@@ -8,7 +8,7 @@
       "name": "career-wayfinder",
       "source": "./plugins/career-wayfinder",
       "description": "A proactive career guide for recent grads who don't know what they want yet. It learns what pulls you through quick reaction rounds, maps industries (including ones you'd never think of), organisations and early-career people, and drafts outreach in your own voice. You send everything.",
-      "version": "0.2.0"
+      "version": "0.2.1"
     }
   ]
 }

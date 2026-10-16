@@ -33,8 +33,8 @@ career-wayfinder/
 ├── .claude-plugin/plugin.json
 ├── README.md, START-HERE.md
 ├── agents/
-│   ├── scout.md              sonnet; one industry or a wildcard discovery run → finds JSON + report
-│   └── people-finder.md      sonnet; 3–4 orgs → early-career people with sources
+│   ├── scout.md              haiku; one industry or a wildcard discovery run → finds JSON + report
+│   └── people-finder.md      haiku; 3–4 orgs → early-career people with sources
 └── skills/
     ├── career-wayfinder/     engine: SKILL.md (rules, tools, session shape, the guide's agenda)
     │   ├── workflows/        setup, about-me, explore-roles, explore-industries, scout, find-people,
