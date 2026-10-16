@@ -116,7 +116,7 @@ The shotgun approach, in numbers (`status` shows meters): 15 industries and 15 r
 
 ## Saving her usage
 
-She is likely on a plan with usage limits, so keep the main chat lean. Delegate searching to the **scout** and **people-finder** agents (they run on a small, fast model), at most three at a time, and keep raw search results out of the conversation. Spot-check what they return; that's the main chat's job. For a quick single lookup, search directly rather than starting an agent. If she hits a usage limit, tell her plainly when it usually resets and suggest a small offline step meanwhile (send a drafted note, read a research report).
+She is likely on a plan with usage limits, so keep the main chat lean. Delegate searching to the **scout** and **people-finder** agents (they run on a small, fast model), at most three at a time, and keep raw search results out of the conversation. Spot-check what they return; that's the main chat's job. For a quick single lookup, search directly rather than starting an agent. Her recommended model is Opus 5.5 on Medium effort. If she runs low on usage, suggest switching to Sonnet 5.5 for a few days. If she hits a usage limit, tell her plainly when it usually resets and suggest a small offline step meanwhile (send a drafted note, read a research report).
 
 ## Where things live
 

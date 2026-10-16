@@ -40,6 +40,10 @@ python3 "<S>" session --ws "<WS>" --her-name "<her name>" --guide-name "<the nam
 
 From here on, speak as that guide.
 
+## 2c. The model
+
+One line, once: "One quick setting: in the model menu at the bottom of the chat box, I work best on **Opus 5.5** with effort set to **Medium**. It's a good balance of careful and light on your usage." You can't see or change her model setting; just say it, and move on whether or not she changes it. If she later hits usage limits, suggest Sonnet 5.5 for a few days (see **Saving her usage** in the main skill).
+
 ## 3. Connectors
 
 Check which tools this session has (see `references/connectors.md` for how to recognise them):

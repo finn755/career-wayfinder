@@ -26,9 +26,10 @@ You never paste a password or key into the chat. If you skip these, your guide s
 
 ## 3. Start your chat, and keep it
 
-1. Start a new task. At the bottom, click **Work in a folder** (the folder icon) and choose your **Documents** folder.
-2. If a friend gave you a head-start file, drag it into the chat.
-3. Type:
+1. Start a new task. Before you type anything, open the model menu at the bottom of the chat box, choose **Opus 5.5**, and set the effort to **Medium**. That's the best balance of thoughtful and economical for this.
+2. Click **Work in a folder** (the folder icon) and choose your **Documents** folder.
+3. If a friend gave you a head-start file, drag it into the chat.
+4. Type:
 
    > Set up Career Wayfinder
 
@@ -54,6 +55,7 @@ Your guide teaches you its commands as you go (type **/** to see them), but you 
 
 ## 5. Good to know
 
+- **Running low on usage?** Switching the model to **Sonnet 5.5** for a few days makes it last longer. Your guide works the same way.
 - **Short sittings work best.** 20 minutes, a few times a week.
 - **Your guide has its own ideas.** It'll suggest industries you haven't considered. React honestly: "not for me" teaches it as much as a yes.
 - **Not knowing what you want is normal.** That's what this is for.
