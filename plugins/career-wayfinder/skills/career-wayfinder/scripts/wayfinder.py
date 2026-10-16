@@ -920,6 +920,11 @@ def view_model(data, ws=None):
         "guide": guide_name(data),
         "onboarding": onboarding(data, ws), "todos": todos(data), "growth": growth(data),
         "signals_n": len(data["signals"]),
+        "tags": sorted([dict(d, pattern=True) for d in pulls + pushes] + [dict(d, pattern=False) for d in hunches],
+                       key=lambda d: -abs(d["sum"])),
+        "quotes": [{"about": s.get("about"), "why": s.get("why"), "date": s.get("date"), "source": s.get("source", "")}
+                   for s in reversed(data["signals"]) if (s.get("why") or "").strip()
+                   and s.get("why") != "no reason given"][:12],
         "generated": today(),
     }
 
@@ -987,169 +992,387 @@ def render_md(data):
 HTML = r"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>__TITLE__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;1,400&family=Geist+Mono:wght@400;500&display=swap">
 <style>
-:root{--bg:#f6f4ef;--card:#fff;--ink:#1f2a2e;--muted:#66727a;--line:#e3dfd6;--soft:#efece5;--accent:#1e6b5c;--on-accent:#fff;
---drawn:#1e6b5c;--curious:#3f7fbf;--unrated:#b9b4a9;--meh:#c9a25a;--no:#c76b5f;--new:#e0a526;--shadow:0 2px 10px rgba(0,0,0,.06)}
-@media (prefers-color-scheme:dark){:root{--bg:#14191b;--card:#1d2427;--ink:#e8ecea;--muted:#9aa6a3;--line:#2c3538;--soft:#242c2f;
---accent:#5cc1a6;--on-accent:#0f1a17;--drawn:#5cc1a6;--curious:#7fb0e6;--unrated:#5d6567;--meh:#d9b673;--no:#e08b7f;--new:#f2c14e;--shadow:none}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-.wrap{max-width:1180px;margin:auto;padding:0 16px}
-header{padding:20px 0 6px}h1{font-size:24px;margin:0}header p{margin:2px 0 0;color:var(--muted)}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin:14px 0 6px}@media(max-width:520px){.stats{grid-template-columns:repeat(3,1fr)}.stat b{font-size:20px}.stat em{display:block}}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
-.stat b{display:block;font-size:24px;line-height:1.2}.stat span{font-size:12px;color:var(--muted)}.stat em{font-style:normal;font-size:12px;color:var(--accent);font-weight:600}
-nav{display:flex;gap:6px;overflow-x:auto;padding:10px 0;position:sticky;top:0;background:var(--bg);z-index:2}
-nav button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 14px;font:inherit;cursor:pointer}
-nav button.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
-main{padding:4px 0 48px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:12px}
-.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}@media(max-width:820px){.two{grid-template-columns:1fr}}
-h2{font-size:17px;margin:2px 0 8px}h3{font-size:14px;margin:12px 0 6px}.muted{color:var(--muted)}.small{font-size:13px}
-a{color:var(--accent)}
-.chip{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12px;border:1px solid var(--line);margin:2px 4px 2px 0;background:var(--card)}
-.chip.good{border-color:var(--accent);color:var(--accent);font-weight:600}
-.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
-.bar{height:8px;background:var(--soft);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent)}
-.row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line)}.row:first-of-type{border-top:0}
-.tick{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:13px}
-.tick.done{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}.tick.next{border-color:var(--accent)}
-.next-step{background:var(--soft);border-radius:10px;padding:10px 12px;margin:8px 0}
-code{background:var(--soft);border-radius:6px;padding:1px 6px;font-size:13px;white-space:nowrap}
-.pc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:8px;font-size:13px}
-.pc b{font-size:14px}.flag{color:var(--no);font-weight:600}
-.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.col h3{text-transform:uppercase;letter-spacing:.04em;font-size:12px;color:var(--muted);margin:0 0 6px}
-.grid3{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
-input[type=search]{min-width:240px;flex:1 1 240px}input[type=search],select{font:inherit;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
-.filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
-.filters button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 11px;font:inherit;font-size:13px;cursor:pointer}
-.filters button.on{border-color:var(--accent);color:var(--accent);font-weight:600}
-button.copy{border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:8px;padding:2px 9px;font:inherit;font-size:12px;cursor:pointer;margin-top:4px}
-blockquote{margin:6px 0;padding:6px 10px;border-left:3px solid var(--line);color:var(--ink);font-size:13px;white-space:pre-wrap}
-svg{width:100%;height:auto;display:block}g.ind{cursor:pointer}
-.nd{transition:opacity .45s ease,transform .45s ease}.hide{opacity:0}
-@keyframes pulse{0%{stroke-opacity:.9;stroke-width:3}100%{stroke-opacity:0;stroke-width:14}}.glow{animation:pulse 1.8s ease-out infinite}
-.maptools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:6px}
-.maptools button{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);border-radius:999px;padding:6px 14px;font:inherit;cursor:pointer}
-.legend span{margin-right:12px;font-size:13px;white-space:nowrap}
-.empty{color:var(--muted);padding:6px 0}
+/* BunkerOS design system (Paper: "BunkerOS — Design System and Demo Screens"), light only by design.
+   Layout: 240px sidebar with her goals pinned + one white surface per view (Today, Map, Organisations, People, About you). */
+:root{
+  --bg:#F5F6F8; --surface:#FFFFFF; --panel:#FAFBFC; --s2:#EFF0F1; --s3:#E4E5E7;
+  --text:#080A0F; --muted:#616368; --faint:#A8A9AC; --line:#EFF0F1; --ring:rgb(8 10 15 / 8%);
+  --accent:#3B83F6; --accent-ink:#2A78D6; --accent-soft:#E9F1FD; --accent-line:#D0E2FE;
+  --ai:#8658E1; --ai-soft:#F3EEFC; --ai-ink:#5B3BB0;
+  --done:#00983A; --done-soft:#E6F2EB; --done-ink:#006B29;
+  --await:#C78200; --await-soft:#FFF4DB; --await-ink:#9A6400;
+  --block:#DF202E; --block-soft:#FDECEC; --block-ink:#B4141F; --push:#E34948; --star:#EDA100;
+  --sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif; --serif:"IBM Plex Serif",Georgia,serif; --mono:"Geist Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 var(--sans);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
+a{color:var(--accent-ink);text-decoration:none}a:hover{text-decoration:underline}
+.app{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100%}
+/* sidebar */
+.side{display:flex;flex-direction:column;gap:18px;padding:12px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:8px;padding:6px 6px 0;font-weight:600;letter-spacing:-.01em}
+.brand i{width:22px;height:22px;border-radius:6px;background:var(--text);display:grid;place-items:center}.brand i:after{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.card{background:var(--surface);border-radius:10px;box-shadow:0 1px 2px rgb(0 0 0 / 5%),0 0 0 1px var(--ring)}
+.persona{display:flex;align-items:center;gap:10px;padding:8px}
+.av{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600;background:var(--accent-soft);color:var(--accent-ink)}
+.av.lg{width:32px;height:32px}
+.persona b{display:block;font-size:13px;font-weight:500}.persona small{display:block;font-size:11px;color:var(--muted)}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{display:flex;align-items:center;gap:10px;height:30px;padding:0 8px;border-radius:8px;font-size:13px;text-align:left}
+.nav button:hover{background:var(--s2)}.nav button.on{background:var(--s3);font-weight:500}
+.nav svg{flex:none;width:16px;height:16px}.nav span{flex:1}
+.nav em{font-style:normal;font:11px var(--mono);color:var(--muted)}
+.nav .badge{flex:none;font:600 11px/16px var(--sans);color:#fff;background:var(--accent);border-radius:999px;padding:0 6px}
+.goals{margin-top:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.lbl{font:10.5px/16px var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.goal{display:flex;flex-direction:column;gap:6px;font-size:12px;line-height:16px}
+.bar{flex:1;height:5px;border-radius:999px;background:var(--s2);overflow:hidden}.bar i{display:block;height:100%;border-radius:999px;background:var(--accent)}
+.goal .r{display:flex;align-items:center;gap:8px}.goal .r em{font:11px var(--mono);font-style:normal;color:var(--muted)}
+/* main */
+.main{padding:8px 8px 8px 0;min-width:0}
+.surface{background:var(--surface);border-radius:10px;box-shadow:0 0 1px rgb(0 0 0 / 30%);min-height:calc(100vh - 16px);padding:36px 40px 32px 48px;display:flex;flex-direction:column;gap:22px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.head h1{font:400 30px/36px var(--serif);letter-spacing:-.02em;margin:0;text-wrap:balance}
+.head p{margin:6px 0 0;color:var(--muted);font-size:14px;max-width:70ch}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:8px;background:var(--surface);box-shadow:0 0 0 1px var(--ring);font-size:12px;font-weight:500;white-space:nowrap}
+.btn:hover{background:var(--panel)}.btn.pri{background:var(--accent);color:#fff;box-shadow:none}.btn.pri:hover{background:#2F74E4}
+.btn:focus-visible,.nav button:focus-visible,.row:focus-visible,g.ind:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;font-size:11px;line-height:16px;font-weight:500;white-space:nowrap}
+.pill.accent{background:var(--accent-soft);color:var(--accent-ink)}.pill.done{background:var(--done-soft);color:var(--done)}.pill.ai{background:var(--ai-soft);color:var(--ai-ink)}
+.pill.await{background:var(--await-soft);color:var(--await-ink)}.pill.block{background:var(--block-soft);color:var(--block-ink)}.pill.grey{background:var(--s2);color:var(--muted)}
+.pill.dark{background:var(--text);color:#fff}.pill.line{box-shadow:0 0 0 1px rgb(0 0 0 / 12%);color:var(--muted)}
+.pill .d{width:6px;height:6px;border-radius:50%;background:currentColor}.tr .pill{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.h2{font-size:15px;line-height:20px;font-weight:600;margin:0}
+.muted{color:var(--muted)}.small{font-size:12px;line-height:16px}
+.cols{display:grid;gap:24px;align-items:start}
+.empty{color:var(--muted);font-size:13px;padding:12px 0}
+.estate{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:48px 24px;border-radius:12px;border:1.5px dashed rgb(0 0 0 / 9%);text-align:center;min-height:420px}
+.estate .ic{width:44px;height:44px;border-radius:12px;background:var(--accent-soft);display:grid;place-items:center;color:var(--accent-ink)}
+.estate h2{font:400 22px/28px var(--serif);margin:0}.estate p{margin:0;max-width:440px;color:var(--muted);font-size:14px;line-height:21px}
+.dashbox{padding:16px;border-radius:10px;border:1.5px dashed rgb(0 0 0 / 9%);display:flex;flex-direction:column;gap:10px}
+.softbox{padding:16px;border-radius:10px;background:#F2F7FE;box-shadow:0 0 0 1px var(--accent-line);display:flex;flex-direction:column;gap:10px}
+.next.ok{background:#F1F8F3;box-shadow:0 0 0 1px #CFE6D8}.next.ok .k{color:var(--done-ink)}
+.why{display:block;font-size:11px;color:var(--done-ink)}
+.mono{font-family:var(--mono)}
+/* Today */
+.next{padding:18px 20px;border-radius:10px;background:#F2F7FE;box-shadow:0 0 0 1px var(--accent-line);display:flex;flex-direction:column;gap:10px}
+.next .k{font-size:11px;font-weight:500;color:var(--accent-ink)}.next h2{font:400 22px/28px var(--serif);margin:0}
+.say{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.say code{font:12px var(--mono);background:#fff;border-radius:6px;padding:4px 8px;box-shadow:0 0 0 1px var(--ring)}
+.list{border-radius:10px;box-shadow:0 0 0 1px var(--ring);overflow:hidden;background:#fff}
+.li{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line)}.li:last-child{border-bottom:0}
+.li .box{flex:none;width:16px;height:16px;border-radius:5px;box-shadow:inset 0 0 0 1.5px rgb(0 0 0 / 20%)}
+.li .t{flex:1;min-width:0}.li .t b{display:block;font-size:13px;font-weight:500}.li .t small{display:block;font-size:12px;color:var(--muted)}
+.step{display:flex;align-items:center;gap:10px;min-height:30px;font-size:13px}.step .c{flex:none;width:18px;height:18px;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgb(0 0 0 / 16%)}
+.step .c.nx{box-shadow:inset 0 0 0 2px var(--accent)}.step .c.done{background:var(--done);box-shadow:none;display:grid;place-items:center}
+.step span{flex:1}.step span.c{flex:none}.step code{font:11px var(--mono);color:var(--muted);background:var(--s2);border-radius:5px;padding:1px 6px}
+.mets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--s2);border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px var(--ring)}
+.mets div{background:#fff;padding:10px 12px}.mets b{font-size:20px;line-height:24px;font-weight:600}.mets em{font-style:normal;font-size:11px;font-weight:600;color:var(--done);margin-left:6px}.mets small{display:block;font-size:11px;color:var(--muted)}
+.ag{display:flex;gap:10px;padding:8px 0}.ag i{flex:none;width:7px;height:7px;border-radius:50%;background:var(--ai);margin-top:6px}.ag small{display:block;color:var(--muted);font-size:12px}
+/* Map */
+.mapwrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+.canvas{border-radius:10px;background:var(--panel);box-shadow:0 0 0 1px var(--ring);padding:8px;position:relative}
+.canvas svg{width:100%;height:auto;display:block}
+g.ind{cursor:pointer;transition:opacity .35s ease,transform .35s ease}g.ind:hover circle.n{stroke-width:2.5}
+.hide{opacity:0}
+.legend{display:flex;flex-wrap:wrap;gap:14px;padding:6px 8px 4px;font-size:12px;color:var(--muted)}.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.panel{display:flex;flex-direction:column;gap:18px}
+.panel h2{font:400 22px/28px var(--serif);margin:0}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--s2);border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px var(--ring)}
+.trio div{background:#fff;padding:10px 12px}.trio b{display:block;font-size:20px;line-height:24px;font-weight:600}.trio small{font-size:11px;color:var(--muted)}
+.orow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.logo{flex:none;width:28px;height:28px;border-radius:6px;background:var(--s2);display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--muted)}
+.orow .t{flex:1;min-width:0}.orow b{display:block;font-size:13px;font-weight:500}.orow small{display:block;font-size:12px;color:var(--muted)}
+.quote{padding:12px 14px;border-radius:10px;background:var(--panel);border-left:2px solid var(--accent)}
+.quote q{display:block;font:italic 14px/21px var(--serif);quotes:"“" "”"}.quote small{display:block;margin-top:4px;font-size:11px;color:var(--muted)}
+/* Organisations */
+.filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.search{display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border-radius:8px;box-shadow:0 0 0 1px rgb(0 0 0 / 10%);background:#fff;width:200px}
+.search input{border:0;outline:0;font:13px var(--sans);width:100%;background:transparent;color:var(--text)}
+.seg{display:flex;gap:2px;padding:3px;border-radius:8px;background:var(--s2)}
+.seg button{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:12px;color:var(--muted);white-space:nowrap}
+.seg button em{font:11px var(--mono);font-style:normal;color:var(--faint)}.seg button.on{background:#fff;color:var(--text);font-weight:500;box-shadow:0 1px 2px rgb(0 0 0 / 5%)}
+select{font:12px var(--sans);height:32px;padding:0 8px;border-radius:8px;border:0;box-shadow:0 0 0 1px rgb(0 0 0 / 10%);background:#fff;color:var(--text)}
+.orgwrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.table{border-radius:10px;box-shadow:0 0 0 1px var(--ring);overflow:hidden;background:#fff}
+.tr{display:grid;grid-template-columns:minmax(0,1fr) 104px 70px 120px 56px 24px;gap:12px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line)}
+.th{height:34px;padding-block:0;background:var(--panel)}.th div{font:10.5px/16px var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.grp{display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;background:var(--panel);border-bottom:1px solid var(--line);font-size:12px;font-weight:600}
+.grp i{width:7px;height:7px;border-radius:50%}.grp em{font:11px var(--mono);font-style:normal;color:var(--faint);font-weight:400}
+.row{min-height:54px;cursor:pointer;font-size:12px}.row:hover{background:#FAFCFF}.row.sel{background:#F4F8FE;box-shadow:inset 2px 0 0 var(--accent)}
+.row .n b{display:block;font-size:13px;font-weight:500;line-height:18px}.row .n small{display:block;color:var(--muted);line-height:16px}
+.dash{color:var(--faint)}
+.star{display:grid;place-items:center}
+.drawer{padding:18px;display:flex;flex-direction:column;gap:16px;position:sticky;top:16px;box-shadow:0 1px 2px rgb(0 0 0 / 5%),0 0 0 1px var(--ring),0 8px 24px rgb(0 0 0 / 6%)}
+.drawer h2{font:400 20px/26px var(--serif);margin:0}
+.route{padding:12px;border-radius:10px;background:var(--done-soft);display:flex;flex-direction:column;gap:6px;font-size:12px;line-height:18px;color:#1F4D2E}
+.route b{color:var(--done-ink);font-weight:600}
+/* People */
+.pipe{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-radius:10px;box-shadow:0 0 0 1px var(--ring);overflow:hidden}
+.pipe div{padding:12px 16px;border-right:1px solid var(--line)}.pipe div:last-child{border:0}.pipe b{display:block;font-size:22px;line-height:28px;font-weight:600}.pipe small{font-size:12px;color:var(--muted)}
+.pipe .acc{background:#F4F8FE;color:var(--accent-ink)}.pipe .aw{background:#FFFAEE;color:var(--await-ink)}.pipe .dn{color:var(--done)}.pipe .acc small,.pipe .aw small,.pipe .dn small{color:inherit;font-weight:500}
+.act{padding:14px;display:flex;flex-direction:column;gap:10px}
+.act .top{display:flex;align-items:center;gap:10px}.act .top .t{flex:1;min-width:0}.act .top b{display:block;font-size:13px;font-weight:600}.act .top small{display:block;font-size:12px;color:var(--muted)}
+.msg{padding:10px 12px;border-radius:8px;background:var(--panel);font-size:13px;line-height:19px;white-space:pre-wrap}.msg .lbl{font-size:10px;line-height:14px}
+.sec{height:28px;display:flex;align-items:center;padding:0 12px;background:var(--panel);border-bottom:1px solid var(--line);font:10px var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.prow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line)}.prow .t{flex:1;min-width:0}.prow b{display:block;font-size:13px;font-weight:500}.prow small{display:block;font-size:12px;color:var(--muted)}
+.prow .r{display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:11px;color:var(--muted);text-align:right}
+/* About */
+.bars{padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+.brow{display:grid;grid-template-columns:150px minmax(0,1fr) 78px 64px;gap:12px;align-items:center;min-height:32px;font-size:13px}
+.track{display:grid;grid-template-columns:1fr 1px 1fr;align-items:center;height:32px}.track .ax{height:32px;background:#D9DADC}
+.track .l{display:flex;justify-content:flex-end}.track i{display:block;height:12px}
+.brow .cnt{font:11px var(--mono);color:var(--muted);text-align:right;white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{padding:4px 10px;border-radius:8px;background:#fff;box-shadow:0 0 0 1px var(--ring);font-size:12px}
+.rg{display:flex;flex-direction:column;gap:6px}.rg .h{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}.rg .h i{width:7px;height:7px;border-radius:50%}.rg .h em{font:11px var(--mono);font-style:normal;color:var(--faint);font-weight:400}
+/* responsive */
+@media (max-width:1180px){.mapwrap,.orgwrap{grid-template-columns:1fr}.drawer{position:static}}
+@media (max-width:820px){
+  .app{grid-template-columns:1fr}.side{position:static;height:auto;gap:10px;padding:12px 16px}
+  .nav{flex-direction:row;overflow-x:auto}.nav button{flex:none}.persona,.goals{display:none}
+  .main{padding:0 8px 8px}.surface{padding:24px 16px;min-height:0}
+  .cols{grid-template-columns:1fr!important}.pipe{grid-template-columns:repeat(3,1fr)}.mets{grid-template-columns:repeat(2,1fr)}
+  .tr{grid-template-columns:minmax(0,1fr) 92px 24px}.tr>:nth-child(2),.tr>:nth-child(3),.tr>:nth-child(5){display:none}
+  .brow{grid-template-columns:110px minmax(0,1fr) 56px}.brow .cnt{display:none}
+}
+@media (prefers-reduced-motion:reduce){g.ind{transition:none}}
 </style></head><body>
-<div class="wrap"><header><h1 id="t"></h1><p id="sub"></p><div class="stats" id="stats"></div></header>
-<nav id="tabs"></nav><main id="main"></main></div>
+<div class="app"><aside class="side" id="side"></aside><main class="main"><div class="surface" id="view"></div></main></div>
 <script>
 const D=__DATA__;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const COL={drawn:'var(--drawn)',curious:'var(--curious)',unrated:'var(--unrated)',meh:'var(--meh)',no:'var(--no)'};
-const ORDER=['drawn','curious','unrated','meh','no'];
-const orgById=Object.fromEntries(D.orgs.map(o=>[o.id,o])),indById=Object.fromEntries(D.industries.map(o=>[o.id,o]));
-const WEEK=new Date(Date.now()-3*864e5).toISOString().slice(0,10);
-const isNew=x=>String(x.created||'')>=WEEK;
-const link=(u,t)=>u?`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t||'link')}</a>`:esc(t||'');
-const peopleAt=oid=>D.people.filter(p=>p.org==oid);
-const src=x=>(x.sources||[]).filter(s=>/^https?:/.test(s)).slice(0,2).map((s,i)=>link(s,i?'source '+(i+1):'source')).join(' · ');
-let tab='home',sel=null,ofilter='all',oq='',oind='';
-document.title=document.title;$('#t').textContent=document.title;
-$('#sub').textContent=(D.meta.destination?'“'+D.meta.destination+'” · ':'')+'Kept by '+D.guide+' · updated '+D.generated;
-const G=D.growth,S=[['industries',D.industries.length,G.industries],['roles',D.roles.length,G.roles],['organisations',D.orgs.length,G.orgs],['people',D.people.length,G.people],['reactions',D.signals_n,G.reactions]];
-$('#stats').innerHTML=S.map(([k,v,g])=>`<div class="stat"><b>${v}</b><span>${k}</span> ${g?`<em>+${g} this week</em>`:''}</div>`).join('');
-const TABS={home:'Home',map:'Map',orgs:'Organisations',people:'People',you:'About you'};
-function nav(){$('#tabs').innerHTML=Object.entries(TABS).map(([k,v])=>`<button class="${k==tab?'on':''}" data-t="${k}">${v}</button>`).join('');
- document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;draw()})}
+const orgById=Object.fromEntries(D.orgs.map(o=>[o.id,o])),indById=Object.fromEntries(D.industries.map(i=>[i.id,i]));
+const LEVEL={drawn:0,curious:1,unrated:2,meh:3,no:4};
+const REACT={drawn:['Drawn to','accent'],curious:['Curious','accent'],unrated:['Not yet rated','grey'],meh:['Meh','await'],no:['Not for me','block']};
+const first=n=>String(n||'').split(' ')[0];
+const initials=n=>String(n||'?').split(/\s+/).filter(w=>/^[A-Za-z0-9]/.test(w)).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?';
+const link=(u,t)=>/^https?:/.test(u||'')?`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`:esc(t);
+const peopleAt=id=>D.people.filter(p=>p.org===id);
+const orgsIn=id=>D.orgs.filter(o=>(o.industries||[]).includes(id));
+const pill=(t,k)=>`<span class="pill ${k}">${esc(t)}</span>`;
+const STAR='<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="m8 2.2 1.8 3.7 4 .6-2.9 2.8.7 4L8 11.4l-3.6 1.9.7-4-2.9-2.8 4-.6L8 2.2Z" fill="var(--star)"/></svg>';
+const STAR0='<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="m8 2.2 1.8 3.7 4 .6-2.9 2.8.7 4L8 11.4l-3.6 1.9.7-4-2.9-2.8 4-.6L8 2.2Z" stroke="#C9CACD" stroke-width="1.1" stroke-linejoin="round"/></svg>';
+const name=D.meta.name||'You';
+let view='today',selInd=null,selOrg=null,ofilter='all',oq='',osort='close';
+try{const h=location.hash.replace('#','');if(['today','map','orgs','people','you'].includes(h))view=h}catch(e){}
 
-/* ---------- Home ---------- */
-const PACE={'on track':'var(--drawn)','reached':'var(--drawn)','behind':'var(--meh)','past due':'var(--no)','no date':'var(--muted)'};
-const KIND={scout:'exploring',wildcard:'wildcard',people:'finding people',outreach:'messages','follow-up':'follow-up',question:'question','ask-her':'for you',setup:'setup',goal:'goals'};
-function goalCard(g){return `<div class="pc"><b>${esc(g.text)}</b><div class="bar" style="margin:7px 0"><i style="width:${g.pct}%"></i></div><span class="small">${g.have} of ${g.target} · by ${esc(g.due)} · <b style="font-size:13px;color:${PACE[g.pace]||'var(--muted)'}">${esc(g.pace)}</b></span>${g.why?`<div class="small muted">Why: ${esc(g.why)}</div>`:''}${g.next_step?`<div class="small">Next step: ${esc(g.next_step)}</div>`:''}</div>`}
-function onboardingCard(){const st=D.onboarding,req=st.filter(s=>!s.optional),done=req.filter(s=>s.state!='todo').length;
- if(done>=req.length)return '';const nx=st.find(s=>s.state=='todo');
- return `<div class="card"><h2>Getting started · ${done} of ${req.length}</h2><div class="bar"><i style="width:${100*done/req.length}%"></i></div>
- ${nx?`<div class="next-step"><b>Next:</b> ${esc(nx.label)}<br><span class="small">In your chat with ${esc(D.guide)}, type <code>${esc(nx.command)}</code> or just say what you want to do.</span></div>`:''}
- ${st.filter(s=>s.state=='todo').map(s=>`<div class="row"><span class="tick ${s===nx?'next':''}"></span><div>${esc(s.label)}${s.optional?' <span class="muted small">(optional)</span>':''} <code>${esc(s.command)}</code></div></div>`).join('')}
- ${done?`<details><summary class="small muted" style="cursor:pointer;margin-top:6px">${done} done ✓ show them</summary>${st.filter(s=>s.state!='todo').map(s=>`<div class="row"><span class="tick ${s.state=='done'?'done':''}">${s.state=='done'?'✓':'–'}</span><div class="muted">${esc(s.label)} <code>${esc(s.command)}</code></div></div>`).join('')}</details>`:''}</div>`}
-function copyBtn(p){return p&&p.draft?`<button class="copy" data-copy="${esc(p.id)}">Copy message</button>`:''}
-function todoCard(){const t=D.todos;const pid=id=>D.people.find(p=>p.id==id);
- return `<div class="card"><h2>Your to-dos</h2>${t.length?t.map(x=>{const p=x.person&&pid(x.person);return `<div class="row"><span class="tick"></span><div style="flex:1">${esc(x.text)}${p&&p.profile_url&&x.kind=='send'?` · ${link(p.profile_url,'open profile')}`:''}${p&&p.draft&&x.kind=='send'?`<blockquote>${esc(p.draft)}</blockquote>${copyBtn(p)}`:''}</div></div>`}).join(''):'<p class="empty">Nothing waiting on you. Nice. Ask your guide “what should I do today?” for something new.</p>'}</div>`}
-function homeView(){const a=D.goals.filter(g=>g.status=='active');
- const q=D.questions.filter(q=>q.status=='open'&&(q.type=='chat'||q.type=='look-up'));
- return onboardingCard()+`<div class="two"><div>${todoCard()}</div><div><div class="card"><h2>Your goals</h2>${a.map(goalCard).join('')||'<p class="empty">No goals yet. Type <code>/my-goals</code> when you’re ready to set a few.</p>'}</div>
- <div class="card"><h2>What ${esc(D.guide)} is working on</h2>${D.agenda.map(x=>`<div class="row"><span class="chip">${esc(KIND[x.kind]||x.kind)}</span><div>${esc(x.text)}${x.why?`<div class="small muted">${esc(x.why)}</div>`:''}</div></div>`).join('')||'<p class="empty">Nothing queued.</p>'}
- ${q.length?'<h3>Questions you’re carrying</h3>'+q.map(x=>`<div class="small">• ${esc(x.text)}</div>`).join(''):''}</div></div></div>`}
+/* ---------- shell ---------- */
+const ICON={today:'<path d="M3 7.5 8 3l5 4.5V13H3V7.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>',
+ map:'<circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" fill="currentColor"/>',
+ orgs:'<rect x="3" y="2.5" width="10" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M6 6h1M9 6h1M6 9h1M9 9h1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
+ people:'<circle cx="6" cy="6" r="2.3" stroke="currentColor" stroke-width="1.3"/><path d="M2 13c.5-2.2 2-3.3 4-3.3s3.5 1.1 4 3.3M10.5 3.8a2.2 2.2 0 0 1 0 4.4M12 9.9c1 .5 1.7 1.5 2 3.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
+ you:'<path d="M8 13.5S2.5 10.3 2.5 6.4A2.9 2.9 0 0 1 8 4.8a2.9 2.9 0 0 1 5.5 1.6c0 3.9-5.5 7.1-5.5 7.1Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>'};
+function side(){
+  const nav=[['today','Today',D.todos.length?`<span class="badge">${D.todos.length}</span>`:''],['map','Map',`<em>${D.industries.length}</em>`],['orgs','Organisations',`<em>${D.orgs.length}</em>`],['people','People',`<em>${D.people.length}</em>`],['you','About you','']];
+  const goals=D.goals.filter(g=>g.status==='active');
+  const worst=goals.some(g=>g.pace==='past due')?['Needs a look','var(--block-ink)']:goals.some(g=>g.pace==='behind')?['A bit behind','var(--await-ink)']:['On track','var(--done)'];
+  $('#side').innerHTML=`<div class="brand"><i></i>Career Wayfinder</div>
+  <div class="card persona"><span class="av">${esc(initials(name))}</span><div><b>${esc(name)}'s map</b><small>Kept by ${esc(D.guide)}</small></div></div>
+  <nav class="nav">${nav.map(([k,l,x])=>`<button class="${k===view?'on':''}" data-v="${k}" aria-current="${k===view?'page':'false'}"><svg viewBox="0 0 16 16" fill="none" style="color:${k===view?'var(--text)':'var(--muted)'}">${ICON[k]}</svg><span>${l}</span>${x}</button>`).join('')}</nav>
+  ${goals.length?`<div class="card goals"><div style="display:flex;justify-content:space-between"><span class="lbl">Your goals</span><span class="small" style="color:${worst[1]};font-weight:500">${worst[0]}</span></div>
+   ${goals.map(g=>`<div class="goal"><div>${esc(g.text)}</div><div class="r"><div class="bar"><i style="width:${Math.max(g.pct,g.have?0:4)}%;background:${g.pace==='behind'||g.pace==='past due'?'var(--await)':'var(--accent)'}"></i></div><em>${g.have}/${g.target}</em></div></div>`).join('')}</div>`
+   :`<div class="card goals" style="gap:8px"><span class="lbl">Your goals</span><div class="small">No goals yet. Once you've explored a little, you'll set two to four small ones together.</div><div><code class="mono" style="font-size:11px;color:var(--muted);background:var(--s2);border-radius:5px;padding:1px 6px">/my-goals</code></div></div>`}`;
+  document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>go(b.dataset.v));
+}
+function go(v,opts){view=v;Object.assign(window,{});if(opts&&opts.industry)oind=opts.industry;try{history.replaceState(null,'','#'+v)}catch(e){}draw();window.scrollTo(0,0)}
+let oind='';
+function head(title,sub,acts){return `<div class="head"><div><h1>${esc(title)}</h1><p>${esc(sub)}</p></div><div class="acts">${acts||''}</div></div>`}
+function say(phrase,lead){return `<div class="say"><span class="small muted">${esc(lead||'In your chat, say')}</span><code>${esc(phrase)}</code>${copyBtn(phrase,'Copy')}</div>`}
+function estate(icon,title,body,phrase){return `<div class="estate"><span class="ic"><svg width="22" height="22" viewBox="0 0 16 16" fill="none">${ICON[icon]}</svg></span><h2>${esc(title)}</h2><p>${esc(body)}</p>${say(phrase)}</div>`}
+function copyBtn(text,label,cls){return `<button class="btn ${cls||''}" data-copy="${esc(text)}">${esc(label||'Copy')}</button>`}
+
+/* ---------- Today ---------- */
+function todayView(){
+  const h=new Date().getHours(),greet=!D.signals_n&&!D.orgs.length?'Welcome':h<12?'Good morning':h<18?'Good afternoon':'Good evening';
+  const t=D.todos,top=t[0],rest=t.slice(1,4);
+  const nx=D.onboarding.find(s=>s.state==='todo'&&!s.optional);
+  let next;
+  if(top){const p=top.person&&D.people.find(x=>x.id===top.person);const ask={reply:`help me answer ${first(p&&p.name)}`,thanks:`help me thank ${first(p&&p.name)}`,'follow-up':`draft a follow-up for ${first(p&&p.name)}`,send:`I sent my note to ${first(p&&p.name)}`,draft:'help me reach out',react:'show me some industries'}[top.kind]||'what should I do today?';
+    const why={reply:'They replied. A quick, friendly answer keeps the conversation going.',thanks:'A short thank-you within a day is what people remember.','follow-up':"It's been a week. One gentle nudge is normal and polite.",send:'Your message is drafted and waiting. Sending is the hardest step, and it takes a minute.',draft:'Your guide is ready to draft notes for the people you picked.',react:'These are industries your guide thinks you might not have considered.'}[top.kind]||'';
+    next={k:'Do this next',title:top.text,why,ask,draft:p&&top.kind==='send'?p.draft:''};}
+  else if(nx){next={k:'Next on your getting-started list',title:nx.label,why:`Type ${nx.command} in your chat with ${D.guide}, or just say what you want to do.`,ask:nx.command}}
+  else next={k:'You\'re all caught up',title:'Nothing is waiting on you',why:'Messages are out and nothing needs an answer. Want something new while you wait?',ask:'what should I do today?',ok:true};
+  const req=D.onboarding.filter(s=>!s.optional),done=req.filter(s=>s.state!=='todo').length;
+  const steps=D.onboarding.filter(s=>s.state==='todo').slice(0,4),lastDone=D.onboarding.filter(s=>s.state==='done').slice(-1);
+  const G=D.growth,mets=[[D.industries.length,'industries',G.industries],[D.orgs.length,'organisations',G.orgs],[D.people.length,'people',G.people],[D.people.filter(p=>['replied','chatted','thanked'].includes(p.status)).length,'replies',0]];
+  return head(`${greet}, ${name}`,greet==='Welcome'?"Your guide is setting things up with you. Here's the first step.":t.length?"Here's where you are, and the one thing worth doing first.":"Nothing is waiting on you. Here's where things stand.")+
+  `<div class="cols" style="grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)"><div style="display:flex;flex-direction:column;gap:22px">
+   <section class="next ${next.ok?'ok':''}"><span class="k">${esc(next.k)}</span><h2>${esc(next.title)}</h2><div class="muted">${esc(next.why)}</div>
+    ${next.draft?`<div class="msg">${esc(next.draft)}</div>`:''}
+    <div class="say">${next.draft?copyBtn(next.draft,'Copy message','pri'):''}<span class="small muted">In your chat, say</span><code>${esc(next.ask)}</code>${copyBtn(next.ask,'Copy')}</div></section>
+   <section style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between"><h3 class="h2">Your to-dos</h3><span class="small muted">${t.length>4?(t.length-4)+' more after these':''}</span></div>
+    ${rest.length?`<div class="list">${rest.map(x=>`<div class="li"><span class="box"></span><div class="t"><b>${esc(x.text)}</b><small>${esc({reply:'They replied',thanks:'After your conversation','follow-up':'No reply yet',send:'Message ready to copy',draft:'Picked, not yet drafted',react:'Wildcards from your guide','try-it':'Something to try','think-it':'Something to think about'}[x.kind]||'')}</small></div>${pill({reply:'Replied',thanks:'Thank-you','follow-up':'Follow-up',send:'Ready to send',draft:'To draft',react:'Wildcards'}[x.kind]||x.kind,{reply:'await',thanks:'done','follow-up':'block',send:'accent',draft:'grey',react:'ai'}[x.kind]||'grey')}</div>`).join('')}</div>`:`<div class="dashbox muted" style="font-size:13px">${t.length?'Nothing else waiting on you. Nice.':'Nothing waiting on you yet. As your map grows, replies to answer and messages to send show up here.'}</div>`}</section></div>
+  <div style="display:flex;flex-direction:column;gap:22px">
+   ${done<req.length?`<section class="card" style="padding:16px 18px;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between"><b style="font-size:14px">Getting started</b><span class="mono small muted">${done} of ${req.length}</span></div><div class="bar" style="flex:none"><i style="width:${100*done/req.length}%;background:var(--done)"></i></div>
+    <div>${lastDone.map(s=>`<div class="step"><span class="c done"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="m2.2 5.2 1.8 1.8 3.8-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="muted">${esc(s.label)}</span><code>${esc(s.command)}</code></div>`).join('')}
+    ${steps.map((s,i)=>`<div class="step"><span class="c ${i===0?'nx':''}"></span><span style="${i===0?'font-weight:500':''}">${esc(s.label)}${s.optional?' <span class="muted small">(optional)</span>':''}</span><code>${esc(s.command)}</code></div>`).join('')}</div></section>`:''}
+   <section style="display:flex;flex-direction:column;gap:8px"><span class="lbl">Your map this week</span><div class="mets">${mets.map(([n,l,g])=>`<div><b>${n}</b>${g?`<em>+${g}</em>`:''}<small>${l}</small></div>`).join('')}</div></section>
+   <section><span class="lbl">What ${esc(D.guide)} is working on</span>${D.agenda.length?D.agenda.slice(0,4).map(a=>`<div class="ag"><i></i><div>${esc(a.text)}${a.why?`<small>${esc(a.why)}</small>`:''}</div></div>`).join(''):'<p class="empty">Nothing queued. Ask what to do next.</p>'}</section>
+  </div></div>`;
+}
 
 /* ---------- Map ---------- */
-function wrapLabel(s,n){const w=s.split(' '),L=[];let c='';for(const x of w){if((c+' '+x).trim().length>n&&c){L.push(c);c=x}else c=(c+' '+x).trim()}L.push(c);return L.length>3?L.slice(0,2).concat([L.slice(2).join(' ').slice(0,n-1)+'…']):L}
+function wrap(s,n){const w=String(s).split(' '),L=[];let c='';for(const x of w){if((c+' '+x).trim().length>n&&c){L.push(c);c=x}else c=(c+' '+x).trim()}L.push(c);return L.slice(0,3)}
+function mapSvg(){
+  const W=920,H=680,cx=W/2,cy=H/2,R={0:110,1:200,2:282};
+  const shown=D.industries.filter(i=>i.interest!=='no'||orgsIn(i.id).length);
+  const ring=i=>i.interest==='drawn'?0:i.interest==='curious'?1:2;
+  /* every industry gets its own angle; rings interleave evenly so labels never stack (same rule as the Paper mockups) */
+  const N=shown.length,stepA=360/Math.max(1,N),keyed=[];
+  [0,1,2].forEach(r=>{const g=shown.filter(i=>ring(i)===r);g.forEach((ind,k)=>keyed.push([(k+.5)*N/g.length+r*.01,ind.id]))});
+  keyed.sort((x,y)=>x[0]-y[0]);const pos={};keyed.forEach(([_,id],slot)=>pos[id]=-90+stepA/2+slot*stepA);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Your map: industries placed closer to you the more they pull you">`;
+  [0,1,2].forEach(r=>s+=`<circle cx="${cx}" cy="${cy}" r="${R[r]}" fill="none" stroke="#E4E5E7" ${r?'stroke-dasharray="3 5"':''}/>`);
+  let seq=0;
+  shown.slice().sort((a,b)=>String(a.created||'').localeCompare(String(b.created||''))).forEach(ind=>{
+    const r=ring(ind),a=pos[ind.id]*Math.PI/180,x=cx+R[r]*Math.cos(a),y=cy+R[r]*Math.sin(a),n=orgsIn(ind.id).length,nr=n?Math.min(30,7+n*2.1):6;
+    const lv=ind.interest,sel=ind.id===selInd;
+    const fill=lv==='drawn'?'#3B83F6':lv==='curious'?'#E9F1FD':lv==='meh'?'#FBF3E2':lv==='no'?'#FDECEC':'#FFFFFF';
+    const stroke=lv==='drawn'||lv==='curious'?'#3B83F6':lv==='meh'?'#C78200':lv==='no'?'#E34948':'#A8A9AC';
+    const tc=lv==='drawn'?'#FFFFFF':lv==='curious'?'#2A78D6':'#616368';
+    const c=Math.cos(a),anc=c>.3?'start':c<-.3?'end':'middle';
+    const L=wrap(ind.name,20);let lx=x+(nr+12)*c,ly;
+    if(anc==='middle'){ly=Math.sin(a)>0?y+nr+16:y-nr-8-(L.length-1)*14}else ly=y+4-(L.length-1)*7;
+    s+=`<g class="ind" data-id="${esc(ind.id)}" data-seq="${seq++}" tabindex="0" role="button" aria-label="${esc(ind.name)}, ${esc(REACT[lv]?REACT[lv][0]:lv)}, ${n} organisations">
+      <line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${lv==='drawn'?'#3B83F6':'#E4E5E7'}" stroke-opacity="${lv==='drawn'?.35:1}" stroke-width="${lv==='drawn'?1.5:1}"/>
+      ${sel?`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${nr+7}" fill="#3B83F6" fill-opacity=".16"/>`:''}
+      <circle class="n" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${nr.toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="${sel?2.5:1.5}"/>
+      ${n&&nr>=11?`<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="${tc}">${n}</text>`:''}
+      <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anc}" font-family="Inter, sans-serif" font-size="12" font-weight="${lv==='drawn'||sel?600:400}" fill="${lv==='drawn'||lv==='curious'||sel?'#080A0F':'#616368'}">${L.map((t,i)=>`<tspan x="${lx.toFixed(1)}" dy="${i?14:0}">${esc(t)}</tspan>`).join('')}</text>
+      ${ind.origin==='wildcard'?`<circle cx="${(x+nr*.75).toFixed(1)}" cy="${(y-nr*.75).toFixed(1)}" r="6" fill="#8658E1"/><path d="M${(x+nr*.75).toFixed(1)} ${(y-nr*.75-3.5).toFixed(1)}l1 2.5 2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1z" fill="#fff"/>`:''}
+    </g>`});
+  s+=`<circle cx="${cx}" cy="${cy}" r="30" fill="#080A0F"/><text x="${cx}" y="${cy+5}" text-anchor="middle" font-family="IBM Plex Serif, serif" font-size="${name.length>8?12:15}" fill="#fff">${esc(name)}</text></svg>`;
+  return s;
+}
+function indPanel(ind){
+  if(!ind)return '';
+  const os=orgsIn(ind.id),routes=os.filter(o=>o.new_grad_program).length,ppl=os.reduce((n,o)=>n+peopleAt(o.id).length,0);
+  const top=os.slice().sort((a,b)=>(b.status==='shortlisted')-(a.status==='shortlisted')||(!!b.new_grad_program)-(!!a.new_grad_program)||peopleAt(b.id).length-peopleAt(a.id).length).slice(0,3);
+  const q=D.quotes.find(x=>x.about===ind.id||x.about===ind.name);
+  const r=REACT[ind.interest]||['',''];
+  return `<div style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="pill ${r[1]}"><span class="d"></span>${esc(r[0])}</span>${ind.origin==='wildcard'?pill('✦ Your guide’s wildcard','ai'):''}<span class="small muted">${ind.created?'Added '+esc(ind.created):''}</span></div>
+   <h2>${esc(ind.name)}</h2><div class="muted" style="font-size:13px;line-height:20px">${esc(ind.why_her||ind.blurb||'')}</div></div>
+   <div class="trio"><div><b>${os.length}</b><small>organisations</small></div><div><b style="color:var(--done)">${routes}</b><small>new-grad routes</small></div><div><b>${ppl}</b><small>people found</small></div></div>
+   ${ind.interest==='unrated'&&!os.length?`<div class="softbox"><b style="font-size:13px;font-weight:500">How does this one feel?</b><div class="small muted" style="line-height:18px">React in your chat and it moves closer to you, or drifts away. Nothing is decided yet.</div>${say('show me some industries')}</div>`:
+     !os.length?`<div class="dashbox"><b style="font-size:13px;font-weight:500">Nothing found here yet</b><div class="small muted" style="line-height:18px">Your guide hasn't explored this industry yet. It takes a few minutes and you can do something else meanwhile.</div>${say('go explore '+ind.name)}</div>`:''}
+   ${os.length?`<div><span class="lbl">Best places to start</span>${top.map(o=>`<div class="orow"><span class="logo">${esc(initials(o.name))}</span><div class="t"><b>${esc(o.name)}</b><small>${esc([o.location,o.size].filter(Boolean).join(' · '))}</small></div>${o.new_grad_program?pill('New-grad route','done'):peopleAt(o.id).length?pill(peopleAt(o.id).length+' people','grey'):''}</div>`).join('')}
+   <div style="display:flex;gap:8px;padding-top:12px"><button class="btn pri" data-goind="${esc(ind.id)}" style="flex:1;justify-content:center">See all ${os.length} organisations</button>${copyBtn('find people in '+ind.name,'Find people')}</div></div>`:''}
+   ${q?`<div class="quote"><q>${esc(q.why)}</q><small>You, ${esc(q.source||'reacting')} · ${esc(q.date)}</small></div>`:''}`;
+}
 function mapView(){
- const inds=D.industries.filter(i=>i.interest!=='no'||D.orgs.some(o=>(o.industries||[]).includes(i.id)));
- const W=1000,H=900,cx=W/2,cy=H/2,R=Math.min(300,120+inds.length*10);
- let seq=0;const nodes=[];
- let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Map of industries and organisations"><circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="var(--line)" stroke-dasharray="4 7"/>`;
- inds.forEach((ind,k)=>{const a=-Math.PI/2+2*Math.PI*k/Math.max(1,inds.length),x=cx+R*Math.cos(a),y=cy+R*Math.sin(a);
-  const orgs=D.orgs.filter(o=>(o.industries||[]).includes(ind.id));const r=15+Math.min(26,orgs.length*3.5);
-  const col=COL[ind.interest]||COL.unrated,on=sel==ind.id,strong=ind.interest=='drawn';
-  nodes.push({seq:seq++,created:ind.created||''});
-  s+=`<g class="nd ind" data-seq="${seq-1}" data-id="${esc(ind.id)}"><line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${col}" stroke-opacity="${strong?.6:ind.interest=='curious'?.35:.15}" stroke-width="${strong?3.5:1.5}"/>`;
-  if(isNew(ind))s+=`<circle class="glow" cx="${x}" cy="${y}" r="${r+3}" fill="none" stroke="var(--new)"/>`;
-  s+=`<circle cx="${x}" cy="${y}" r="${r}" fill="${col}" fill-opacity="${on?1:.88}" stroke="${on?'var(--ink)':'var(--card)'}" stroke-width="${on?3:2}"><title>${esc(ind.name)} · ${esc(ind.interest)} · ${orgs.length} organisations</title></circle>`;
-  if(orgs.length)s+=`<text x="${x}" y="${y+5}" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">${orgs.length}</text>`;
-  else if(ind.origin==='wildcard')s+=`<text x="${x}" y="${y+5}" text-anchor="middle" font-size="15" fill="#fff">✦</text>`;
-  const lr=R+r+48,lx=cx+lr*Math.cos(a),ly=cy+lr*Math.sin(a),anc=Math.cos(a)>.25?'start':Math.cos(a)<-.25?'end':'middle';
-  const L=wrapLabel(ind.name,20),y0=ly-(L.length-1)*8+4;
-  s+=`<text x="${lx}" y="${y0}" text-anchor="${anc}" font-size="15" font-weight="${strong?700:400}" fill="var(--ink)">${L.map((t,i)=>`<tspan x="${lx}" dy="${i?17:0}">${esc(t)}</tspan>`).join('')}${ind.origin==='wildcard'&&orgs.length?' ✦':''}</text></g>`;
-  orgs.slice(0,16).forEach((o,j)=>{const m=Math.min(orgs.length,16),b=a+(j-(m-1)/2)*.075,ox=cx+(R+r+20)*Math.cos(b),oy=cy+(R+r+20)*Math.sin(b),n=peopleAt(o.id).length;
-   nodes.push({seq:seq++,created:o.created||''});
-   s+=`<g class="nd" data-seq="${seq-1}"><circle cx="${ox}" cy="${oy}" r="${n?6:4}" fill="${o.status=='shortlisted'?col:'var(--muted)'}" stroke="${n?'var(--ink)':'none'}" stroke-width="1.5"><title>${esc(o.name)}${n?' · '+n+' people':''}</title></circle></g>`})});
- const me=esc(D.meta.name||'You');
- s+=`<circle cx="${cx}" cy="${cy}" r="56" fill="var(--accent)"/><text x="${cx}" y="${cy+6}" text-anchor="middle" fill="var(--on-accent)" font-size="${me.length>9?15:19}" font-weight="700">${me}</text></svg>`;
- const legend=`<div class="legend">${ORDER.map(k=>`<span><i class="dot" style="background:${COL[k]}"></i>${k}</span>`).join('')}<span>number = organisations found</span><span>✦ your guide’s wildcard</span><span><i class="dot" style="background:var(--new)"></i>new in the last few days</span></div>`;
- const panel=sel?indPanel(indById[sel]):`<div class="card"><p class="muted" style="margin:0">Each circle is an industry, coloured by how you reacted. The small dots around it are organisations your guide found (filled = shortlisted, outlined = you have people there). Click an industry to see inside it.</p></div>`;
- return `<div class="card"><div class="maptools"><h2 style="margin:0">Your map</h2><button id="replay">▶ Replay how your map grew</button></div><div id="replaylabel" class="small muted" style="min-height:20px"></div>${s}${legend}</div><div id="panel">${panel}</div>`}
-function indPanel(ind){if(!ind)return '';const orgs=D.orgs.filter(o=>(o.industries||[]).includes(ind.id));
- const roles=D.roles.filter(r=>(r.industries||[]).includes(ind.id));
- return `<div class="card"><h2>${esc(ind.name)}</h2><span class="chip" style="border-color:${COL[ind.interest]}">${esc(ind.interest)}</span>${ind.origin=='wildcard'?'<span class="chip">✦ your guide’s wildcard</span>':''}${isNew(ind)?'<span class="chip">new this week</span>':''}
- ${ind.blurb?`<p>${esc(ind.blurb)}</p>`:''}${ind.why_her?`<p class="small"><b>Why it might fit you:</b> ${esc(ind.why_her)}</p>`:''}
- ${roles.length?`<p class="small"><b>Roles here:</b> ${roles.map(r=>esc(r.name)).join(', ')}</p>`:''}
- <h3>${orgs.length} organisation${orgs.length==1?'':'s'}</h3><div class="grid3">${orgs.map(orgCard).join('')}</div>${orgs.length?'':`<p class="empty">Nothing found here yet. Ask your guide to “go explore ${esc(ind.name)}”.</p>`}</div>`}
-function replay(){const els=[...document.querySelectorAll('.nd')];if(!els.length)return;const order=els.map(e=>+e.dataset.seq);
- els.forEach(e=>e.classList.add('hide'));const lab=$('#replaylabel');let i=0;const step=Math.max(40,Math.min(260,4000/els.length));
- (function tick(){if(i>=els.length){lab.textContent='That’s your whole map, so far.';return}els[i].classList.remove('hide');lab.textContent='Growing… '+(i+1)+' of '+els.length;i++;setTimeout(tick,step)})()}
+  if(!D.industries.length)return head('Your map','The closer an industry sits to you, the more it pulls you. Bigger circles mean more has been found there.')+estate('map','Your map starts here',"Each industry you react to lands here. The ones you're drawn to sit closest to you, and your guide adds a few wildcards you'd never think to search for.",'show me some industries');
+  if(!selInd){const d=D.industries.filter(i=>i.interest==='drawn').sort((a,b)=>orgsIn(b.id).length-orgsIn(a.id).length)[0]||D.industries[0];selInd=d&&d.id}
+  const wild=D.industries.filter(i=>i.origin==='wildcard'&&i.interest==='unrated').length,unr=D.industries.filter(i=>i.interest==='unrated').length,allUnrated=unr===D.industries.length;
+  return head('Your map','The closer an industry sits to you, the more it pulls you. Bigger circles mean more has been found there.',
+    (allUnrated?`<span class="pill ai" style="height:30px;border-radius:8px;padding:0 10px"><span class="d"></span>${unr} ideas waiting for your reaction</span>`:wild?`<span class="pill ai" style="height:30px;border-radius:8px;padding:0 10px"><span class="d"></span>${wild} wildcard${wild>1?'s':''} waiting for you</span>`:'')+(allUnrated?'':`<button class="btn" id="replay"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M3 2v8l7-4-7-4Z" fill="currentColor"/></svg>Replay how it grew</button>`))+
+  `<div class="mapwrap"><div class="canvas">${mapSvg()}<div class="legend"><span><i style="background:#3B83F6"></i>Drawn to</span><span><i style="background:#E9F1FD;box-shadow:inset 0 0 0 1.5px #3B83F6"></i>Curious</span><span><i style="background:#fff;box-shadow:inset 0 0 0 1.5px #A8A9AC"></i>Not yet rated</span><span><i style="background:#FBF3E2;box-shadow:inset 0 0 0 1.5px #C78200"></i>Meh</span><span><i style="background:#8658E1"></i>Your guide’s wildcard</span><span id="replaylabel"></span></div></div>
+   <div class="panel" id="panel">${indPanel(indById[selInd])}</div></div>`;
+}
+function replay(){const b=$('#replay');if(b){b.textContent='Replaying…';b.style.background='var(--accent-soft)'}const els=[...document.querySelectorAll('g.ind')].sort((a,b)=>a.dataset.seq-b.dataset.seq);els.forEach(e=>e.classList.add('hide'));const lab=$('#replaylabel');let i=0;const step=Math.max(90,Math.min(400,3500/els.length));
+  (function t(){if(i>=els.length){lab.textContent='';if(b){b.innerHTML='<svg width="12" height="12" viewBox="0 0 12 12"><path d="M3 2v8l7-4-7-4Z" fill="currentColor"/></svg>Replay how it grew';b.style.background=''}return}els[i].classList.remove('hide');lab.innerHTML=`<b style="color:var(--accent-ink);font-weight:500">Growing… ${i+1} of ${els.length}</b>`;i++;setTimeout(t,step)})()}
 
 /* ---------- Organisations ---------- */
-function orgCard(o){const ppl=peopleAt(o.id);const inds=(o.industries||[]).map(i=>indById[i]).filter(Boolean);
- return `<div class="pc"><b>${link(o.url,o.name)}</b>${o.status=='shortlisted'?' <span class="chip good">shortlisted</span>':''}${isNew(o)?' <span class="chip">new</span>':''}
- <div class="small muted">${esc([o.location,o.size].filter(Boolean).join(' · '))}</div>${o.blurb?`<div>${esc(o.blurb)}</div>`:''}${o.why_her?`<div class="small"><b>Why you:</b> ${esc(o.why_her)}</div>`:''}
- ${o.new_grad_program?`<div class="small"><span class="chip good">new-grad route</span>${/^https?:/.test(o.new_grad_program)?link(o.new_grad_program,'programme page'):esc(o.new_grad_program)}</div>`:''}
- <div class="small">${inds.map(i=>`<span class="chip">${esc(i.name)}</span>`).join('')}</div>
- ${ppl.length?`<div class="small">People: ${ppl.map(p=>esc(p.name)+' ('+esc(p.status)+')').join(', ')}</div>`:''}
- <div class="small muted">${[o.careers_url?link(o.careers_url,'careers page'):'',src(o)].filter(Boolean).join(' · ')}</div></div>`}
-function orgsView(){const F={all:'All',shortlisted:'Shortlisted',liked:'Drawn or curious',grad:'Has a new-grad route',people:'Has people',fresh:'New this week'};
- const q=oq.toLowerCase();let list=D.orgs.filter(o=>{if(ofilter=='shortlisted'&&o.status!='shortlisted')return false;
-  if(ofilter=='liked'&&!['drawn','curious'].includes(o.interest)&&!(o.industries||[]).some(i=>indById[i]&&['drawn','curious'].includes(indById[i].interest)))return false;
-  if(ofilter=='grad'&&!o.new_grad_program)return false;if(ofilter=='people'&&!peopleAt(o.id).length)return false;if(ofilter=='fresh'&&!isNew(o))return false;
-  if(oind&&!(o.industries||[]).includes(oind))return false;
-  if(q&&!JSON.stringify(o).toLowerCase().includes(q))return false;return true});
- list.sort((a,b)=>(b.status=='shortlisted')-(a.status=='shortlisted')||ORDER.indexOf(a.interest)-ORDER.indexOf(b.interest)||a.name.localeCompare(b.name));
- return `<div class="card"><h2>Organisations · ${list.length} of ${D.orgs.length}</h2><div class="filters"><input type="search" id="oq" placeholder="Search name, place, anything" value="${esc(oq)}">
- <select id="oind"><option value="">All industries</option>${D.industries.filter(i=>D.orgs.some(o=>(o.industries||[]).includes(i.id))).map(i=>`<option value="${esc(i.id)}" ${oind==i.id?'selected':''}>${esc(i.name)}</option>`).join('')}</select>
- ${Object.entries(F).map(([k,v])=>`<button data-f="${k}" class="${ofilter==k?'on':''}">${v}</button>`).join('')}</div>
- <div class="grid3">${list.map(orgCard).join('')}</div>${list.length?'':'<p class="empty">Nothing matches. Try another filter, or ask your guide to go exploring.</p>'}</div>`}
+function orgRows(){
+  const q=oq.toLowerCase();
+  let list=D.orgs.filter(o=>{if(ofilter==='short'&&o.status!=='shortlisted')return false;if(ofilter==='grad'&&!o.new_grad_program)return false;if(ofilter==='people'&&!peopleAt(o.id).length)return false;if(oind&&!(o.industries||[]).includes(oind))return false;if(q&&!JSON.stringify(o).toLowerCase().includes(q))return false;return true});
+  return list;
+}
+function orgsView(){
+  if(!D.orgs.length)return head('Organisations','Places your guide finds in the industries you like will show up here.')+estate('orgs','No organisations yet',"When you're drawn to an industry, your guide goes exploring and brings back five to eight places in it, with any programmes for new grads.",'go explore');
+  const list=orgRows();
+  if(!selOrg||!list.find(o=>o.id===selOrg)){const s=list.find(o=>o.status==='shortlisted')||list[0];selOrg=s&&s.id}
+  const C={all:D.orgs.length,short:D.orgs.filter(o=>o.status==='shortlisted').length,grad:D.orgs.filter(o=>o.new_grad_program).length,people:D.orgs.filter(o=>peopleAt(o.id).length).length};
+  const groups=[];const seen=new Set();
+  const inds=D.industries.slice().sort((a,b)=>(LEVEL[a.interest]??9)-(LEVEL[b.interest]??9));
+  const sortFn=osort==='name'?(a,b)=>a.name.localeCompare(b.name):osort==='new'?(a,b)=>String(b.created||'').localeCompare(String(a.created||'')):(a,b)=>(b.status==='shortlisted')-(a.status==='shortlisted')||(!!b.new_grad_program)-(!!a.new_grad_program)||a.name.localeCompare(b.name);
+  inds.forEach(ind=>{const os=list.filter(o=>!seen.has(o.id)&&(o.industries||[])[0]===ind.id||(!seen.has(o.id)&&(o.industries||[]).includes(ind.id)&&!(o.industries||[]).some(x=>indById[x]&&(LEVEL[indById[x].interest]??9)<(LEVEL[ind.interest]??9))));os.forEach(o=>seen.add(o.id));if(os.length)groups.push([ind,os.sort(sortFn)])});
+  const other=list.filter(o=>!seen.has(o.id));if(other.length)groups.push([{name:'Other',interest:'unrated',id:''},other.sort(sortFn)]);
+  const row=o=>{const p=peopleAt(o.id).length;return `<div class="tr row ${o.id===selOrg?'sel':''}" data-org="${esc(o.id)}" tabindex="0"><div class="n"><b>${esc(o.name)}</b><small>${esc(o.blurb||'')}</small></div><div>${esc(o.location||'')||'<span class="dash">—</span>'}</div><div class="muted">${esc(o.size||'')||'<span class="dash">—</span>'}</div><div>${o.new_grad_program?pill(shortRoute(o.new_grad_program),'done'):'<span class="dash">—</span>'}</div><div>${p?`<b style="font-weight:500">${p}</b>`:'<span class="dash">—</span>'}</div><div class="star">${o.status==='shortlisted'?STAR:STAR0}</div></div>`};
+  const o=orgById[selOrg];
+  return head('Organisations',`${D.orgs.length} places across ${new Set(D.orgs.flatMap(o=>o.industries||[])).size} industries. Shortlist the ones worth a conversation.`,copyBtn('export my organisations to a spreadsheet','Copy “export to a spreadsheet”'))+
+  `<div class="filters"><label class="search"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.2" stroke="#A8A9AC" stroke-width="1.3"/><path d="m9.2 9.2 3 3" stroke="#A8A9AC" stroke-width="1.3" stroke-linecap="round"/></svg><input id="oq" type="search" placeholder="Search name, city, anything" value="${esc(oq)}" aria-label="Search organisations"></label>
+   <div class="seg">${[['all','All'],['short','Shortlisted'],['grad','New-grad route'],['people','Has people']].map(([k,l])=>`<button data-f="${k}" class="${ofilter===k?'on':''}">${l}<em>${C[k]}</em></button>`).join('')}</div>
+   <select id="oind" aria-label="Industry"><option value="">All industries</option>${inds.filter(i=>orgsIn(i.id).length).map(i=>`<option value="${esc(i.id)}" ${oind===i.id?'selected':''}>${esc(i.name)}</option>`).join('')}</select>
+   <select id="osort" aria-label="Sort" style="margin-left:auto"><option value="close" ${osort==='close'?'selected':''}>Sort: closest to you</option><option value="name" ${osort==='name'?'selected':''}>Sort: name</option><option value="new" ${osort==='new'?'selected':''}>Sort: newest</option></select></div>
+  <div class="orgwrap"><div class="table"><div class="tr th"><div>Organisation</div><div>Where</div><div>Size</div><div>New-grad route</div><div>People</div><div></div></div>
+   ${!list.length?`<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:40px 24px;text-align:center"><b style="font-size:14px;font-weight:500">Nothing matches${oq?' “'+esc(oq)+'”':''}${ofilter!=='all'?' with this filter':''}</b><span class="muted" style="font-size:13px">Try clearing the filters, or ask your guide to look further.</span><button class="btn pri" id="clearf">Clear filters</button>${say(oq?'go explore '+oq:'go explore','Or, in your chat, say')}</div>`:''}${groups.map(([ind,os])=>`<div class="grp"><i style="background:${ind.interest==='drawn'?'var(--accent)':ind.interest==='curious'?'#9DC0F8':ind.interest==='meh'?'var(--await)':'var(--faint)'}"></i>${esc(ind.name)}${REACT[ind.interest]&&ind.id?pill(REACT[ind.interest][0],REACT[ind.interest][1]):''}${ind.origin==='wildcard'?pill('✦ Wildcard','ai'):''}<em>${os.length}</em></div>${os.map(row).join('')}`).join('')||''}</div>
+   ${o&&list.length?`<aside class="card drawer">${orgDrawer(o)}</aside>`:`<aside class="dashbox" style="min-height:240px;align-items:center;justify-content:center;text-align:center"><span class="muted" style="font-size:13px">Pick an organisation to see why it might fit you, its new-grad route and who you could talk to.</span></aside>`}</div>`;
+}
+function shortRoute(t){t=String(t).replace(/https?:\/\/\S+/g,'').trim();let s=t.split(/[:(.;—–]| - /)[0].trim()||'Yes';if(s.length>18){s=s.slice(0,18);s=s.slice(0,s.lastIndexOf(' ')>8?s.lastIndexOf(' '):18)+'…'}return s}
+function orgDrawer(o){
+  const inds=(o.industries||[]).map(i=>indById[i]).filter(Boolean),ppl=peopleAt(o.id);
+  const route=o.new_grad_program||'',url=(route.match(/https?:\/\/\S+/)||[])[0];
+  return `<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><h2>${esc(o.name)}</h2><div class="small muted">${esc([inds.map(i=>i.name).join(', '),o.location,o.size].filter(Boolean).join(' · '))}</div></div>${o.status==='shortlisted'?`<span class="pill await">${STAR.replace('width="16" height="16"','width="12" height="12"')}Shortlisted</span>`:`<span class="pill line">${STAR0.replace('width="16" height="16"','width="12" height="12"')}Not shortlisted</span>`}</div>
+   ${o.why_her||o.blurb?`<div><span class="lbl">Why you</span><div style="font-size:13px;line-height:20px">${esc(o.why_her||o.blurb)}</div></div>`:''}
+   ${route?`<div class="route"><b><span class="pill done" style="padding:0;background:none"><span class="d"></span></span>New-grad route</b><div>${esc(route.replace(url||'',''))}</div><div style="display:flex;gap:6px;flex-wrap:wrap">${url?`<a class="btn" href="${esc(url)}" target="_blank" rel="noopener">Programme page ↗</a>`:''}${o.careers_url?`<a class="btn" href="${esc(o.careers_url)}" target="_blank" rel="noopener">Careers page ↗</a>`:''}</div></div>`:`<div class="card" style="padding:12px;background:var(--panel);display:flex;flex-direction:column;gap:6px;box-shadow:0 0 0 1px var(--ring)"><b style="font-size:12px;font-weight:600">No new-grad programme found</b><span class="small muted" style="line-height:18px">Roles here are posted one at a time. A conversation with someone inside is usually the way in.</span>${o.careers_url?`<div><a class="btn" href="${esc(o.careers_url)}" target="_blank" rel="noopener">Careers page ↗</a></div>`:''}</div>`}
+   <div style="display:flex;flex-direction:column;gap:8px"><span class="lbl">People here</span>${ppl.length?ppl.map(p=>`<div style="display:flex;align-items:center;gap:10px"><span class="av" style="background:var(--done-soft);color:var(--done-ink)">${esc(initials(p.name))}</span><div style="flex:1;min-width:0"><b style="display:block;font-size:13px;font-weight:500">${esc(p.name)}${p.title?' · '+esc(p.title):''}</b><small class="muted">${esc(p.early_career_evidence||p.why||'')}</small></div>${statusPill(p.status)}</div>`).join(''):`<span class="small muted">Nobody found yet.</span>${say('find people at '+o.name)}`}</div>
+   <div style="padding-top:8px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)">${o.url?link(o.url,'Website')+' · ':''}${(o.sources||[]).filter(s=>/^https?:/.test(s)).slice(0,3).map((s,i)=>link(s,'source '+(i+1))).join(' · ')||'No source link'}</div>`;
+}
+const SP={found:['Found','grey'],'to-draft':['To draft','grey'],drafted:['Ready to send','accent'],sent:['Sent','grey'],replied:['Replied','await'],chatted:['Talked','done'],thanked:['Thanked','done'],parked:['Parked','grey']};
+function ago(d){const n=Math.round((Date.now()-new Date(d+'T12:00'))/864e5);return isNaN(n)?'Sent a while ago':n<=0?'Sent today':n===1?'Sent yesterday':`Sent ${n} days ago`}
+const statusPill=s=>pill((SP[s]||[s])[0],(SP[s]||['','grey'])[1]);
 
 /* ---------- People ---------- */
-function peopleView(){const cols=[['found','Found'],['to-draft','To draft'],['drafted','Ready to send'],['sent','Sent'],['replied','Replied'],['chatted','Talked'],['thanked','Thanked'],['parked','Parked']];
- return `<div class="card"><h2>People</h2><p class="muted small">Where every conversation stands. <span class="flag">Follow up</span> means it’s been a week since you sent.</p><div class="cols">${cols.map(([c,label])=>{const ps=D.people.filter(p=>p.status==c);return `<div class="col"><h3>${label} · ${ps.length}</h3>${ps.map(p=>`<div class="pc"><b>${link(p.profile_url,p.name)}</b><div>${esc(p.title||'')}</div><div class="muted">${esc((orgById[p.org]||{}).name||p.org)}</div>${p.early_career_evidence?`<div class="small">${esc(p.early_career_evidence)}</div>`:''}${p.shared?`<div class="small"><span class="chip good">${esc(p.shared)}</span></div>`:''}${p.why?`<div class="small muted">${esc(p.why)}</div>`:''}${D.followups.includes(p.id)?'<div class="flag small">Follow up</div>':''}${p.next_step?`<div class="small">Next: ${esc(p.next_step)}</div>`:''}${c=='drafted'?copyBtn(p):''}<div class="small muted">${src(p)}</div></div>`).join('')}</div>`}).join('')}</div></div>`}
+function peopleView(){
+  if(!D.people.length)return head('People','Recent grads and early-career people at places you like. They remember the job hunt, and they reply.')+estate('people','Nobody to talk to yet',"Once you've shortlisted a few organisations, your guide finds recent grads and early-career people there from public pages, and tells you why each one is worth a message.",'find people at my shortlisted organisations');
+  const P=D.people,cnt=s=>P.filter(p=>s.includes(p.status)).length;
+  const pipe=[['Found',cnt(['found']),''],['To draft',cnt(['to-draft']),''],['Ready to send',cnt(['drafted']),'acc'],['Sent',cnt(['sent']),''],['Replied',cnt(['replied']),'aw'],['Talked',cnt(['chatted','thanked']),'dn']];
+  const fu=new Set(D.followups);
+  const waiting=P.filter(p=>p.status==='sent'&&!fu.has(p.id)),talked=P.filter(p=>p.status==='thanked'),nextUp=P.filter(p=>p.status==='to-draft'),found=P.filter(p=>p.status==='found');
+  const needs=[...P.filter(p=>p.status==='replied').map(p=>['reply',p]),...P.filter(p=>p.status==='drafted').map(p=>['send',p]),...P.filter(p=>fu.has(p.id)).map(p=>['follow',p]),...P.filter(p=>p.status==='chatted').map(p=>['thanks',p])];
+  const card=([k,p])=>{const o=orgById[p.org]||{};const cfg={reply:['Replied','await','var(--await)','Their reply',p.reply||'They replied. Paste their message into your chat and your guide will help you answer.',`help me answer ${first(p.name)}`,'Copy “help me answer”'],
+    send:['Ready to send','accent','var(--accent)',`${p.contact_routes&&p.contact_routes.some(r=>r.kind==='email')?'Email':'LinkedIn note'}${p.draft?' · '+p.draft.length+' characters':''}`,p.draft||'Draft not saved yet. Ask your guide to draft it.',p.draft,'Copy message'],
+    follow:[ago(p.last_contact),'block','var(--block)','Follow-up',p.followup_draft||`Hi ${first(p.name)}, just floating this back up in case it got buried. No worries at all if now's not a good time.`,p.followup_draft||`Hi ${first(p.name)}, just floating this back up in case it got buried. No worries at all if now's not a good time.`,'Copy follow-up'],
+    thanks:['Talked','done','var(--done)','Next','Send a short thank-you within a day: thanks, one thing they said that helped, what you will do with it.',`help me thank ${first(p.name)}`,'Copy “help me thank”']}[k];
+    return `<div class="card act" style="box-shadow:0 0 0 1px var(--ring),inset 3px 0 0 ${cfg[2]}"><div class="top"><span class="av lg" style="background:var(--s2);color:var(--muted)">${esc(initials(p.name))}</span><div class="t"><b>${esc(p.name)}</b><small>${esc([p.title,o.name].filter(Boolean).join(' · '))}</small></div>${pill(cfg[0],cfg[1])}</div>
+     <div class="msg"><div class="lbl">${esc(cfg[3])}</div>${esc(cfg[4])}</div><div style="display:flex;gap:6px;flex-wrap:wrap">${cfg[5]?copyBtn(cfg[5],cfg[6],'pri'):''}${p.profile_url?`<a class="btn" href="${esc(p.profile_url)}" target="_blank" rel="noopener">Open profile ↗</a>`:''}</div></div>`};
+  const prow=p=>{const o=orgById[p.org]||{};return `<div class="prow"><span class="av lg" style="background:var(--s2);color:var(--muted)">${esc(initials(p.name))}</span><div class="t"><b>${p.profile_url?link(p.profile_url,p.name):esc(p.name)}</b><small>${esc([p.title,o.name].filter(Boolean).join(' · '))}</small>${(p.status==='found'||p.status==='to-draft')&&(p.shared||p.why)?`<span class="why">${esc(p.shared||p.why)}</span>`:''}</div><div class="r">${statusPill(p.status)}<span>${esc(p.status==='found'||p.status==='to-draft'?'':(p.next_step||''))}</span></div></div>`};
+  return head('People','Recent grads and early-career people at places you like. They remember the job hunt, and they reply.',copyBtn('find more people','Copy “find more people”'))+
+  `<div class="pipe">${pipe.map(([l,n,c])=>`<div class="${n?c:''}"><b style="${n?'':'color:var(--faint)'}">${n}</b><small>${l}</small></div>`).join('')}</div>
+  <div class="cols" style="grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)"><section style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:8px"><h3 class="h2">Needs you</h3>${needs.length?`<span class="badge" style="font:600 11px/16px var(--sans);color:#fff;background:var(--accent);border-radius:999px;padding:0 6px">${needs.length}</span>`:''}</div>${needs.map(card).join('')||(found.length||nextUp.length?`<div class="next"><span class="k">Your next step · about 5 minutes</span><h2 style="font:400 20px/26px var(--serif);margin:0">Pick who you'd like to reach out to</h2><div class="muted" style="font-size:13px;line-height:20px">${found.length+nextUp.length} people are waiting on the right. Choose two or three; your guide drafts each message in your own words, and you send them.</div>${say('help me reach out to '+(nextUp.concat(found)).slice(0,2).map(p=>first(p.name)).join(' and '))}</div>`:'<div class="dashbox muted" style="font-size:13px">Nothing waiting on you. When someone replies or a message is ready, it shows up here.</div>')}</section>
+  <section style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between"><h3 class="h2">Everyone else</h3><span class="small muted">Grouped by where it stands</span></div>
+   <div class="list">${waiting.length?'<div class="sec">Waiting on them</div>'+waiting.map(prow).join(''):''}${talked.length?'<div class="sec">Talked</div>'+talked.map(prow).join(''):''}${nextUp.length?'<div class="sec">Next to reach out to</div>'+nextUp.map(prow).join(''):''}${found.length?'<div class="sec">Found, not yet picked</div>'+found.slice(0,6).map(prow).join('')+(found.length>6?`<div class="prow"><span class="small muted">${found.length-6} more</span></div>`:''):''}
+   ${!waiting.length&&!talked.length&&!nextUp.length&&!found.length?'<p class="empty" style="padding:12px">Nobody yet. In your chat, say “find people at” one of your shortlisted organisations.</p>':''}</div></section></div>`;
+}
 
 /* ---------- About you ---------- */
-function youView(){const li=a=>a.length?a.map(d=>`<div class="row"><b>${esc(d.tag)}</b><span class="muted small">${d.n} reaction${d.n==1?'':'s'}</span></div>`).join(''):'<p class="empty">Not enough reactions yet. Three in the same direction make a pattern.</p>';
- const rl=D.roles.slice().sort((a,b)=>ORDER.indexOf(a.interest)-ORDER.indexOf(b.interest));
- return `<div class="two"><div class="card"><h2>What pulls you</h2>${li(D.pulls)}<h2 style="margin-top:14px">What pushes you away</h2>${li(D.pushes)}<h3>Hunches (fewer than three reactions)</h3><p>${D.hunches.map(d=>`<span class="chip">${esc(d.tag)} ${d.sum>0?'+':''}${d.sum}</span>`).join('')||'<span class="muted">none yet</span>'}</p></div>
- <div class="card"><h2>Roles you’ve seen · ${D.roles.length}</h2>${rl.map(r=>`<div class="row"><span class="dot" style="background:${COL[r.interest]};margin-top:6px"></span><div><b>${esc(r.name)}</b> <span class="muted small">${esc(r.interest)}</span>${r.blurb?`<div class="small">${esc(r.blurb)}</div>`:''}</div></div>`).join('')||'<p class="empty">No roles yet. Type <code>/explore-roles</code>.</p>'}</div></div>`}
+function youView(){
+  if(!D.signals_n)return head('About you','What pulls you and what pushes you away will show up here as you react to roles and industries.')+estate('you','Nothing to show yet','Every time you react to a role or an industry, your guide notes what pulled you or put you off. Three reactions in the same direction make a pattern.','show me some roles');
+  const tags=D.tags.slice(0,12),M=Math.max(3,...tags.map(t=>Math.abs(t.sum)));
+  const bar=t=>{const w=(92*Math.abs(t.sum)/M).toFixed(1),col=t.sum>0?'var(--accent)':'var(--push)',op=t.pattern?1:.42,rad=t.sum>0?'0 3px 3px 0':'3px 0 0 3px';
+    return `<div class="brow"><span style="font-weight:${t.pattern?500:400};color:${t.pattern?'var(--text)':'var(--muted)'}">${esc(t.tag)}</span><div class="track"><div class="l">${t.sum<0?`<i style="width:${w}%;background:${col};opacity:${op};border-radius:${rad}"></i>`:''}</div><div class="ax"></div><div>${t.sum>0?`<i style="width:${w}%;background:${col};opacity:${op};border-radius:${rad}"></i>`:''}</div></div><span class="cnt">${t.n} reaction${t.n===1?'':'s'}</span><span style="text-align:right">${t.pattern?pill('Pattern','dark'):pill('Hunch','line')}</span></div>`};
+  const rg=(lvl,title,col)=>{const rs=D.roles.filter(r=>r.interest===lvl);return rs.length?`<div class="rg"><div class="h"><i style="background:${col}"></i>${title}<em>${rs.length}</em></div><div class="chips">${rs.map(r=>`<span class="chip" title="${esc(r.blurb||'')}">${esc(r.name)}</span>`).join('')}</div></div>`:''};
+  return head('About you',`What pulls you and what pushes you away, from ${D.signals_n} reaction${D.signals_n===1?'':'s'}. Three in the same direction make a pattern.`,copyBtn('let me tell you a story','Copy “tell you a story”'))+
+  `<div class="cols" style="grid-template-columns:minmax(0,1.45fr) minmax(0,1fr)"><section class="card bars"><h3 class="h2" style="padding-bottom:6px">What pulls you, what pushes you away</h3>
+   ${tags.length?`<div class="brow" style="min-height:0"><span></span><div style="display:flex;justify-content:space-between"><span class="mono" style="font-size:10px;color:var(--block-ink)">← PUSHES AWAY</span><span class="mono" style="font-size:10px;color:var(--accent-ink)">PULLS YOU →</span></div><span></span><span></span></div>${tags.map(bar).join('')}
+   ${tags.some(t=>t.pattern)?'<p class="small muted" style="margin:10px 0 0">Faded bars are hunches: fewer than three reactions in one direction so far. Your guide tests them in the next rounds.</p>':`<div class="card" style="margin-top:10px;padding:14px;background:var(--panel);box-shadow:none;display:flex;flex-direction:column;gap:8px"><b style="font-size:13px;font-weight:500">No patterns yet, and that's normal</b><span class="small muted" style="line-height:18px">These are hunches from your first ${D.signals_n} reaction${D.signals_n===1?'':'s'}. One or two more rounds of cards and the first patterns usually appear.</span>${say('show me some roles')}</div>`}`:'<p class="empty">No reactions yet. In your chat, say “show me some roles”.</p>'}</section>
+  <div style="display:flex;flex-direction:column;gap:16px"><section class="card" style="padding:18px 20px;background:var(--panel);display:flex;flex-direction:column;gap:14px"><h3 class="h2">Roles you've seen</h3>${rg('drawn','Drawn to','var(--accent)')}${rg('curious','Curious','#9DC0F8')}${rg('unrated','Not yet rated','var(--faint)')}${rg('meh','Meh','var(--await)')}${rg('no','Not for me','var(--push)')}${D.roles.length?'':'<p class="empty">No roles yet.</p>'}</section>
+  ${D.quotes.length?`<section class="card" style="padding:18px 20px;display:flex;flex-direction:column;gap:10px"><span class="lbl">In your words</span>${D.quotes.slice(0,3).map(q=>`<q style="font:italic 15px/22px var(--serif);quotes:'“' '”'">${esc(q.why)}</q>`).join('')}</section>`:''}</div></div>`;
+}
 
-function draw(){nav();$('#main').innerHTML={home:homeView,map:mapView,orgs:orgsView,people:peopleView,you:youView}[tab]();
- document.querySelectorAll('g.ind').forEach(g=>g.onclick=()=>{sel=sel==g.dataset.id?null:g.dataset.id;draw();const p=$('#panel');if(sel&&p)p.scrollIntoView({behavior:'smooth',block:'nearest'})});
- const r=$('#replay');if(r)r.onclick=replay;
- const q=$('#oq');if(q){q.oninput=e=>{oq=e.target.value;draw();const n=$('#oq');n.focus();n.setSelectionRange(oq.length,oq.length)}}
- const si=$('#oind');if(si)si.onchange=e=>{oind=e.target.value;draw()};
- document.querySelectorAll('.filters button').forEach(b=>b.onclick=()=>{ofilter=b.dataset.f;draw()});
- document.querySelectorAll('button.copy').forEach(b=>b.onclick=()=>{const p=D.people.find(x=>x.id==b.dataset.copy);
-  try{navigator.clipboard.writeText(p.draft).then(()=>{b.textContent='Copied ✓'},()=>{b.textContent='Select and copy the text above'})}catch(e){b.textContent='Select and copy the text above'}})}
+function draw(){
+  side();
+  $('#view').innerHTML={today:todayView,map:mapView,orgs:orgsView,people:peopleView,you:youView}[view]();
+  document.querySelectorAll('g.ind').forEach(g=>{const pick=()=>{selInd=g.dataset.id;draw()};g.onclick=pick;g.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick()}}});
+  const rp=$('#replay');if(rp)rp.onclick=replay;
+  document.querySelectorAll('[data-goind]').forEach(b=>b.onclick=()=>{oind=b.dataset.goind;ofilter='all';go('orgs')});
+  document.querySelectorAll('.row[data-org]').forEach(r=>{const pick=()=>{selOrg=r.dataset.org;draw()};r.onclick=pick;r.onkeydown=e=>{if(e.key==='Enter'){pick()}}});
+  document.querySelectorAll('.seg button[data-f]').forEach(b=>b.onclick=()=>{ofilter=b.dataset.f;draw()});
+  const q=$('#oq');if(q){q.oninput=e=>{oq=e.target.value;draw();const n=$('#oq');n.focus();n.setSelectionRange(oq.length,oq.length)}}
+  const si=$('#oind');if(si)si.onchange=e=>{oind=e.target.value;draw()};
+  const cf=$('#clearf');if(cf)cf.onclick=()=>{oq='';ofilter='all';oind='';draw()};
+  const so=$('#osort');if(so)so.onchange=e=>{osort=e.target.value;draw()};
+  document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{const t=b.dataset.copy,orig=b.textContent;
+    const done=()=>{b.textContent='Copied ✓';setTimeout(()=>b.textContent=orig,1600)};
+    try{navigator.clipboard.writeText(t).then(done,()=>{window.prompt?void 0:0;b.textContent='Select and copy: '+t})}catch(e){b.textContent='Select and copy: '+t}});
+}
 draw();
 </script></body></html>
 """

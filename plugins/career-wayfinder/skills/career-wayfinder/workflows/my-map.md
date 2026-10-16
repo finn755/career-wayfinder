@@ -8,7 +8,15 @@ Three things she might mean: show it, read it back, or ask it a question.
 python3 "<S>" render --ws "<WS>"
 ```
 
-Present `Career Map.html` in the chat as a file card she can click (see **Presenting the map** in the main skill); don't point her to the folder. Tabs: **Home** (getting-started list, her to-dos with copyable drafts, goals, what the guide is working on), **Map** (industries coloured by her reactions, organisations around them, new things glowing, and a "Replay how your map grew" button), **Organisations** (searchable, filterable by new-grad route, shortlist, industry), **People** (where every conversation stands), **About you** (what pulls and pushes her, roles seen). Tell her in one line where to start: "Home is your to-do list; Map is the fun one: press Replay." `My Map.md` is the same content as a page. The first time, run `session --onboard map` and point out the Home tab: her to-dos, goals and getting-started list live there.
+Present `Career Map.html` in the chat as a file card she can click (see **Presenting the map** in the main skill); don't point her to the folder. The page is laid out like an app, in the BunkerOS design system, with a sidebar that always shows her goals and five screens:
+
+- **Today**: the one thing worth doing first (with the exact words to say in the chat and a Copy button), her to-dos, the getting-started list, what changed this week, and what the guide is working on.
+- **Map**: industries placed closer to her the more they pull her; bigger circles mean more found. Clicking an industry opens its detail beside the map: why it fits, best places to start, and her own words about it. "Replay how it grew" animates the map's growth.
+- **Organisations**: a table grouped by industry, with search, filters (shortlisted, new-grad route, has people) and a drawer showing why her, the new-grad route and who she could talk to.
+- **People**: a pipeline strip, a "Needs you" list with drafts to copy, then everyone else grouped by where things stand.
+- **About you**: one bar per quality, pulling right or pushing left, with patterns marked separately from hunches; the roles she's seen; her own words.
+
+Every screen has a designed empty state that tells her exactly what to say to fill it. Tell her in one line where to look: "Today is your to-do list; Map is the fun one, press Replay." `My Map.md` is the same content as a page. The first time, run `session --onboard map`.
 
 ## Read it back
 

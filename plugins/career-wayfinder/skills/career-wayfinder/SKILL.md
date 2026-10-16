@@ -68,7 +68,7 @@ She won't discover the commands on her own, so the guide teaches them in order. 
 - Never force the order. If she wants to do something later on the list first, do it; the checklist ticks itself off from the map.
 - Steps that can't be detected are marked by the workflow that does them: `session --onboard exa` (or `gmail`, `map`, `plan`, `schedule`), or `--onboard-skip <key>` when she chooses to skip. When the last step is done, celebrate it: she now knows every command.
 
-The checklist also shows at the top of the Home tab of her map page.
+The checklist also shows on the Today screen of her map page, and her goals stay pinned in its sidebar on every screen.
 
 ## One long chat: staying oriented
 

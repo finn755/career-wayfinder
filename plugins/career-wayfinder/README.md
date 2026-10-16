@@ -46,7 +46,7 @@ career-wayfinder/
         reach-out, log-it, my-map, whats-next   (entry points → engine workflows)
 ```
 
-Her folder (`Career Wayfinder/`): `START HERE.md`, `Career Map.html` (Home: checklist, to-dos with copyable drafts, goals, the guide's agenda · Map: industries ring, new items glow, growth replay · Organisations: search and filters · People: pipeline · About you) + `My Map.md` (rendered), `About Me/` (documents, profile.md, compass.md), `Outreach/` (template.md, drafts/, linkedin-notes.md), `Conversations/`, `Research/` (reports, finds/), `.wayfinder/map.json` (the store; only the script writes it).
+Her folder (`Career Wayfinder/`): `START HERE.md`, `Career Map.html` (BunkerOS design system; sidebar with pinned goals; Today · Map · Organisations · People · About you, each with designed empty states; mockups of every state are on page "30 — Career Wayfinder · map redesign" of the BunkerOS Paper file) + `My Map.md` (rendered), `About Me/` (documents, profile.md, compass.md), `Outreach/` (template.md, drafts/, linkedin-notes.md), `Conversations/`, `Research/` (reports, finds/), `.wayfinder/map.json` (the store; only the script writes it).
 
 ## Engine
 
