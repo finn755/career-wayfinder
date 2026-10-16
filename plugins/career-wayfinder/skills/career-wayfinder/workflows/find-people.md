@@ -35,4 +35,4 @@ If she knows someone already, or a friend can introduce her, that beats any cold
 
 ## Close
 
-Agenda items: draft messages for the to-draft people; for organisations where nobody early-career turned up, one alternative route (the careers page's recruiter, a university alumni contact). `session --note "people: <n> found at <orgs>"`. Offer to draft the messages now.
+Agenda items: draft messages for the to-draft people; for organisations where nobody early-career turned up, one alternative route (the careers page's recruiter, a university alumni contact). `session --note "people: <n> found at <orgs>"`. Present the map in the chat (the new people are on the People tab), then offer to draft the messages now.

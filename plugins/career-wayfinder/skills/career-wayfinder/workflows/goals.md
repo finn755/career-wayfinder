@@ -55,7 +55,7 @@ Keep at most four active goals. If she wants a fifth, ask which one to pause.
 
 ## 4. Close
 
-Read back the north star and the goals as a short list. Tell her how they'll show up: "Each time we talk I'll tell you where you are against these, and I'll connect what we're doing to them. They're yours: if one stops fitting, we change it, no guilt." Run `session --goals-checked --note "goals set"`. Offer the map file (goals now sit at the top).
+Read back the north star and the goals as a short list. Tell her how they'll show up: "Each time we talk I'll tell you where you are against these, and I'll connect what we're doing to them. They're yours: if one stops fitting, we change it, no guilt." Run `session --goals-checked --note "goals set"`. Present the map in the chat (goals now sit at the top of Home).
 
 ## Check-ins (weekly, or when status flags one)
 

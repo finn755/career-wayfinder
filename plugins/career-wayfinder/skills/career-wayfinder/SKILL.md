@@ -96,7 +96,7 @@ She keeps talking to you in the same chat for weeks. Long chats get summarised, 
 
 If she arrived through a specific command, skip the menu and run that workflow, but still give the two-line read first.
 
-**Close.** Every activity, whatever it did: log the signals it produced, add or update the guide's agenda (below), run `session --note`, and tell her in one or two lines what changed and how it moved her goals ("That's 12 of your 30 reactions"), then the next move. Offer the map file when it changed meaningfully. In one long chat, "session" means each activity: run `session` at the end of each, not only at the end of the day.
+**Close.** Every activity, whatever it did: log the signals it produced, add or update the guide's agenda (below), run `session --note`, and tell her in one or two lines what changed and how it moved her goals ("That's 12 of your 30 reactions"), then the next move. When the map changed meaningfully (new industries, organisations, people, goals), present it in the chat (see **Presenting the map**). In one long chat, "session" means each activity: run `session` at the end of each, not only at the end of the day.
 
 ## The guide's agenda
 
@@ -117,6 +117,10 @@ The shotgun approach, in numbers (`status` shows meters): 15 industries and 15 r
 ## Saving her usage
 
 She is likely on a plan with usage limits, so keep the main chat lean. Delegate searching to the **scout** and **people-finder** agents (they run on a small, fast model), at most three at a time, and keep raw search results out of the conversation. Spot-check what they return; that's the main chat's job. For a quick single lookup, search directly rather than starting an agent. Her recommended model is Opus 5.5 on Medium effort. If she runs low on usage, suggest switching to Sonnet 5.5 for a few days. If she hits a usage limit, tell her plainly when it usually resets and suggest a small offline step meanwhile (send a drafted note, read a research report).
+
+## Presenting the map
+
+Always bring the map to her; never send her to find it. After `render` (or `session`, which renders), share `Career Map.html` in the chat with your file-sharing or present-file tool, so it appears as a card she can click to open. Then one line on what's new on it and where to look ("Three new industries on the Map tab; press Replay to watch it grow"). Don't mention the folder path unless she asks where it's kept. The card is a snapshot, so present a fresh one each time it changes rather than referring back to an old card. If no file-sharing tool is available, give a short in-chat summary (her goals, what's new, top to-dos) and then where the file lives.
 
 ## Where things live
 

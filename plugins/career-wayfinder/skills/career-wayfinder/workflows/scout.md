@@ -50,7 +50,7 @@ Wildcard discovery results come back as new industries (`origin: wildcard`, `int
 
 ## Close
 
-Add agenda items: find people at each shortlisted organisation; scout anything the run surfaced but didn't cover. Run `session --note "scout: <industries>, <n> orgs"` (this re-renders the map). Offer the map file: "Your map has filled in. Want to see it?"
+Add agenda items: find people at each shortlisted organisation; scout anything the run surfaced but didn't cover. Run `session --note "scout: <industries>, <n> orgs"` (this re-renders the map). Then present the map in the chat, with one line: "Your map has filled in. Press Replay on the Map tab to watch it grow."
 
 ## Scheduled runs
 

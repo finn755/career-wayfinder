@@ -511,7 +511,7 @@ START_HERE = """# Career Wayfinder
 
 This folder is your career map. Claude keeps it up to date; you never need to edit anything in here.
 
-- **Career Map.html**: open it in your browser to see your map: industries, organisations, people, and where each conversation stands.
+- **Career Map.html**: your map (your guide also shows it to you in the chat whenever it changes): industries, organisations, people, and where each conversation stands.
 - **My Map.md**: the same map as a page you can read.
 - **About Me**: your CV, thesis and anything else you add, plus the notes Claude keeps about what you want from work.
 - **Outreach**: your message template and every draft. LinkedIn notes to copy and paste are in *linkedin-notes.md*.

@@ -8,7 +8,7 @@ Three things she might mean: show it, read it back, or ask it a question.
 python3 "<S>" render --ws "<WS>"
 ```
 
-Share `Career Map.html` (it opens in her browser). Tabs: **Home** (getting-started list, her to-dos with copyable drafts, goals, what the guide is working on), **Map** (industries coloured by her reactions, organisations around them, new things glowing, and a "Replay how your map grew" button), **Organisations** (searchable, filterable by new-grad route, shortlist, industry), **People** (where every conversation stands), **About you** (what pulls and pushes her, roles seen). Tell her in one line where to start: "Home is your to-do list; Map is the fun one: press Replay." `My Map.md` is the same content as a page. The first time, run `session --onboard map` and point out the Home tab: her to-dos, goals and getting-started list live there.
+Present `Career Map.html` in the chat as a file card she can click (see **Presenting the map** in the main skill); don't point her to the folder. Tabs: **Home** (getting-started list, her to-dos with copyable drafts, goals, what the guide is working on), **Map** (industries coloured by her reactions, organisations around them, new things glowing, and a "Replay how your map grew" button), **Organisations** (searchable, filterable by new-grad route, shortlist, industry), **People** (where every conversation stands), **About you** (what pulls and pushes her, roles seen). Tell her in one line where to start: "Home is your to-do list; Map is the fun one: press Replay." `My Map.md` is the same content as a page. The first time, run `session --onboard map` and point out the Home tab: her to-dos, goals and getting-started list live there.
 
 ## Read it back
 
