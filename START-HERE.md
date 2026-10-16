@@ -1,41 +1,38 @@
 # Career Wayfinder · start here
 
-Career Wayfinder gives you your own career guide inside the Claude app. It helps you work out what's out there: roles, industries (including ones you've never thought of), organisations, and people who started there recently. It keeps everything on a map you can open any time, helps you set a few small goals and keeps you pointed at them, and drafts messages so reaching out takes minutes. It never sends anything: you do.
+Career Wayfinder gives you your own career guide inside Claude. It helps you work out what's out there: roles, industries (including ones you've never thought of), organisations, and people who started there recently. It keeps everything on a map, helps you set a few small goals and keeps you pointed at them, and drafts messages so reaching out takes minutes. It never sends anything: you do.
 
-**You need:** the Claude desktop app with a paid plan (Pro or above), and about 20 minutes for the first sitting.
+**You need:** a paid Claude plan (Pro or above) and a web browser. It works at **claude.ai**, so you don't need to install anything. Allow about 20 minutes for the first sitting.
 
-## 1. Install (2 minutes)
+## 1. Add the plugin (2 minutes)
 
-1. Open the **Claude** desktop app and click the **Cowork** tab at the top.
-2. In the left sidebar, open **Customize**, then **Plugins**.
+1. Go to **claude.ai** in Chrome and sign in.
+2. Open **Customize** (left sidebar), then **Plugins**.
 3. Click **Add marketplace** (it may be under **Add**) and paste:
 
    `https://github.com/finn755/career-wayfinder`
 
 4. Find **Career Wayfinder** in the list and click **Install**.
 
-(If a friend sent you a **career-wayfinder.plugin** file instead, choose **Upload plugin** and pick that file.)
+## 2. Switch on Exa (1 minute, recommended)
 
-## 2. Switch on two helpers (3 minutes, recommended)
+Exa is a search engine built for AI, and it comes with the plugin. It makes your guide much better at finding organisations and people. In **Customize › Plugins › Career Wayfinder**, open the **Connectors** tab and click **Connect** next to **Exa**. No account needed.
 
-**Exa** is a search engine built for AI, and it comes with the plugin. It makes your guide much better at finding organisations and people. In **Customize › Plugins › Career Wayfinder**, open the **Connectors** tab and click **Connect** next to **Exa**. No account needed.
-
-**Gmail** lets your guide put email drafts in your Gmail drafts folder for you to check and send. It can't send. In **Settings › Connectors**, find **Gmail**, click **Connect**, choose your account, and click **Allow**.
-
-You never paste a password or key into the chat. If you skip these, your guide still works and can help you switch them on later.
+You never paste a password or key into the chat.
 
 ## 3. Start your chat, and keep it
 
-1. Start a new task. Before you type anything, open the model menu at the bottom of the chat box, choose **Opus 5.5**, and set the effort to **Medium**. That's the best balance of thoughtful and economical for this.
-2. Click **Work in a folder** (the folder icon) and choose your **Documents** folder.
-3. If a friend gave you a head-start file, drag it into the chat.
-4. Type:
+1. Start a new chat. In the model menu, choose **Opus 5.5** and set the effort to **Medium**.
+2. If a friend gave you a head-start file, drag it into the chat.
+3. Type:
 
    > Set up Career Wayfinder
 
-Your guide introduces itself, asks before creating anything, and asks what you'd like to call it. Then it walks you through a short getting-started list, one step at a time.
+Your guide introduces itself, asks what you'd like to call it, and walks you through a short getting-started list, one step at a time.
 
-**Come back to this same chat every time.** It's where your guide lives. It'll greet you, tell you where you are against your goals, and suggest what to do next. Everything is also saved in a **Career Wayfinder** folder in your Documents, so nothing gets lost.
+**Come back to this same chat every time.** It's where your guide lives. It'll greet you, tell you where you are against your goals, and suggest what to do next.
+
+**Keep the newest Career Map file.** Each time your map changes, your guide hands you a file called **Career Map**. Open it to see your map, and keep the newest copy (your Downloads folder is fine). It's also your backup: if your guide ever loses track, drag it back into the chat and you'll pick up exactly where you left off.
 
 ## 4. What to say
 
@@ -51,7 +48,7 @@ Your guide teaches you its commands as you go (type **/** to see them), but you 
 | "Find people at …" | Recent grads and early-career people you could talk to |
 | "Help me reach out" | Your message template, then a draft for each person |
 | "Maya replied" / "I talked to Sam" | Your guide updates your map and drafts what comes next |
-| "Show me my map" | Opens your map: to-dos, goals, and everything you've found |
+| "Show me my map" | The newest copy of your map: to-dos, goals, and everything you've found |
 
 ## 5. Good to know
 
@@ -60,4 +57,6 @@ Your guide teaches you its commands as you go (type **/** to see them), but you 
 - **Your guide has its own ideas.** It'll suggest industries you haven't considered. React honestly: "not for me" teaches it as much as a yes.
 - **Not knowing what you want is normal.** That's what this is for.
 - **It only uses public, professional information** about people, with a link to where it found it. It never guesses email addresses and never logs in to LinkedIn.
+- **Messages go out from you.** Your guide drafts them, and each one has a Copy button on your map. Paste it into LinkedIn or your email and hit send.
 - **If something seems broken,** say "something's wrong with my career map".
+- **Using the Claude desktop app instead?** The same steps work in its **Cowork** tab. There, click **Work in a folder › Documents** when you start the chat, and your map is saved in a Career Wayfinder folder on your computer.

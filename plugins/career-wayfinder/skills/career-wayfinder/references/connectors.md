@@ -23,9 +23,13 @@ What it's for: Exa is a search engine built for AI. It is much better than ordin
 
 If searches start failing with a limit or credits message, Exa's free access has run out for now. Offer the upgrade path once, as optional: "If you'd like more searching, you can make a free account at **exa.ai** (new accounts get free credits), then in **Settings › Connectors** add the **Exa** connector from the directory and sign in." Until then, fall back to built-in web search and say so.
 
+## In the browser (claude.ai)
+
+Plugins and their connectors work the same way: Customize › Plugins › Career Wayfinder › Connectors › Connect next to Exa. If tools don't appear right after connecting, a page refresh usually fixes it. The guide's research agents don't run in the browser, so it researches in the chat itself (see **Saving her usage**).
+
 ## Gmail: email drafts
 
-What it's for: the guide puts email drafts straight into her Gmail drafts folder so she can read, edit and send them herself. It also lets the guide read a reply when she asks it to. It never sends.
+What it's for: the guide puts email drafts straight into her Gmail drafts folder so she can read, edit and send them herself (only if the connector offers a draft tool; in the browser it may be read-only, in which case drafts reach her through the Copy buttons on her map). It also lets the guide read a reply when she asks it to. It never sends.
 
 1. "In the Claude app, open **Settings**, then **Connectors**."
 2. "Find **Gmail** and click **Connect**."

@@ -1,6 +1,6 @@
 # Setup
 
-The first session. Goal: a folder on her computer, names for both of you, the two connectors, her documents, and a first taste of the map, all without her touching a settings file or a command. Expect 15–25 minutes. Read `references/voice.md` first and speak in that voice; this is the moment she decides whether she wants to keep talking to you.
+The first session. Goal: a home for her map, names for both of you, the two connectors, her documents, and a first taste of the map, all without her touching a settings file or a command. Expect 15–25 minutes. Read `references/voice.md` first and speak in that voice; this is the moment she decides whether she wants to keep talking to you.
 
 This chat becomes your home: she'll keep coming back to it rather than starting new ones. If she attached or mentioned a head-start file, read it before step 1 (see **Head-start files**) so you know what she likes to be called.
 
@@ -10,22 +10,32 @@ Three short lines, then the permission question:
 
 > Hi! I'm your career guide. I'll help you work out what's out there (roles, industries, organisations, and people who started there recently), keep it all on a map you can look at any time, and make reaching out to people easy. I draft every message; you're the only one who sends.
 >
-> To do that I need a folder on your computer to keep your map in. Can I create one called **Career Wayfinder** inside your *<connected folder name>* folder?
+> To do that I need a place to keep your map. Can I create one called **Career Wayfinder** inside your *<connected folder name>* folder?
+
+In the **browser** (no connected folder), ask instead: "To do that I'll keep your map right here in this chat, and give you a copy of it to keep each time it changes. Is that OK?" Don't mention folders.
 
 Then, in two lines, show where you're going together: "Here's our getting-started list. It's short, I'll walk you through it one step at a time, and each step teaches you one thing I can do," followed by the first four steps from the checklist (folder, names, Exa, Gmail) as a ticked list. She may have just watched the tour; if she mentions it, say you're glad and pick up from there.
 
-- If no folder is connected to this task, explain how: "At the bottom of this chat, click **Work in a folder** (the folder icon), choose your **Documents** folder, and say 'done'." Wait.
+- Desktop only: if no folder is connected to this task, explain how: "At the bottom of this chat, click **Work in a folder** (the folder icon), choose your **Documents** folder, and say 'done'." Wait.
 - If she says no or wants it elsewhere, ask where and use that.
 
-## 2. Create the folder
+## 2. Create the map's home
+
+Desktop:
 
 ```bash
-python3 "<S>" init --folder "<connected folder>" --name "<her first name, if known>"
+python3 "<S>" init --folder "<connected folder>" --name "<her first name, if known>" --mode desktop
+```
+
+Browser (use your home directory, and the folder whose files are shown to her as downloadable cards, usually `/mnt/user-data/outputs`):
+
+```bash
+python3 "<S>" init --folder ~ --name "<her first name, if known>" --mode web --present-to /mnt/user-data/outputs
 ```
 
 It prints `WS=...` (use that as WS from now on) and `All checks passed.` Running it again is safe and never deletes anything. If it fails, explain the first ✗ line in plain words (most often: the folder was connected read-only, so ask her to reconnect it and allow editing).
 
-Tell her what's inside in one line: "Your map, your documents, your drafts and your conversation notes all live in there. You never need to edit anything in it."
+Tell her what's inside in one line: "Your map, your documents, your drafts and your conversation notes all live in there. You never need to edit anything in it." In the browser: "Your map lives in this chat. Each time it changes I'll hand you a copy; keep the newest one, it's your backup."
 
 ## 2b. Names
 
@@ -52,6 +62,8 @@ Check which tools this session has (see `references/connectors.md` for how to re
 - **Exa** (a search engine built for AI; finds organisations and people far better than ordinary search). It ships with this plugin and needs no account: she only has to click **Connect** on the plugin's Connectors tab. Recommended.
 
 For each one that is missing, offer to walk her through it, one at a time, using the step-by-step scripts in `references/connectors.md`. Exa needs no account; Gmail needs her to sign in to Google. Wait for "done" after each step; if she gets stuck, ask what she sees on screen. Never ask her to paste a password, API key or code into the chat.
+
+In the **browser**: the same Connectors tab is under Customize › Plugins › Career Wayfinder on claude.ai. If Exa's tools don't appear after she connects it, ask her to refresh the page and say "continue setup". Gmail in the browser may only read mail, not create drafts; offer it as optional ("it lets me read replies when you ask"), and rely on the map's Copy buttons for sending.
 
 Connectors added during a task may not appear until a new task. If the tools still aren't visible after she connects one, say: "Start a new chat (top left), connect the same folder, and say **continue setup**. That new chat becomes my home from now on, so that's the one to come back to. Everything we've done is saved in your folder, so nothing's lost." Setup is resumable: `status` shows what exists, including both names.
 

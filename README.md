@@ -12,13 +12,13 @@ It never sends a message, connects, applies or books anything for you. You do.
 
 ## Install
 
-**Cowork (recommended):** in the Claude desktop app, open **Cowork › Customize › Plugins › Add marketplace**, paste `https://github.com/finn755/career-wayfinder`, then install **Career Wayfinder**. Then follow [START-HERE.md](START-HERE.md).
+**claude.ai (browser) or the Claude desktop app:** open **Customize › Plugins › Add marketplace**, paste `https://github.com/finn755/career-wayfinder`, then install **Career Wayfinder**. Then follow [START-HERE.md](START-HERE.md).
 
 **Claude Code:** `/plugin marketplace add finn755/career-wayfinder`, then `/plugin install career-wayfinder@career-wayfinder`. It's built for Cowork; in Claude Code the engine needs `python3` on your machine.
 
 ## Privacy
 
-Your map, documents, drafts and notes stay in a folder on your own computer. The guide only collects public, professional information about people, always with a source link, never guesses email addresses, and never logs in to LinkedIn.
+Your map stays with you: in a folder on your computer (desktop app) or in your own chat, with a copy you keep (browser). The guide only collects public, professional information about people, always with a source link, never guesses email addresses, and never logs in to LinkedIn.
 
 ## What's inside
 

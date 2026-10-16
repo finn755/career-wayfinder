@@ -416,7 +416,7 @@ def names(data, kind, ids):
 # The onboarding checklist: the order she learns the guide in, each step taught through its command.
 # Most steps complete themselves from the map; the rest are marked with `session --onboard <key>`.
 ONBOARDING = [
-    ("folder", "Set up your Career Wayfinder folder", "/start-here", False),
+    ("folder", "Set up your career map", "/start-here", False),
     ("names", "Tell me your name, and give your guide one", "/start-here", False),
     ("exa", "Connect Exa so I can search better", "/start-here", False),
     ("gmail", "Connect Gmail so I can leave email drafts", "/start-here", False),
@@ -555,6 +555,13 @@ def cmd_init(a):
     elif a.name:
         data = load(ws)
         data["meta"]["name"] = a.name
+        save(ws, data)
+    if a.mode or a.present_to:
+        data = load(ws)
+        if a.mode:
+            data["meta"]["mode"] = a.mode
+        if a.present_to:
+            data["meta"]["present_to"] = os.path.abspath(os.path.expanduser(a.present_to))
         save(ws, data)
     # write test
     probe = os.path.join(ws, ".wayfinder", ".write-test")
@@ -875,6 +882,41 @@ def cmd_check(a):
     print("✓ Map is consistent.")
 
 
+def cmd_restore(a):
+    """Rebuild the map from a backup: a Career Map.html she kept (it carries her whole map) or a map.json."""
+    src = os.path.abspath(os.path.expanduser(a.source))
+    if not os.path.exists(src):
+        die(f"Can't find {src}. Ask her to drag in her newest Career Map file.")
+    text = open(src, encoding="utf-8").read()
+    if src.endswith(".json"):
+        raw = text
+    else:
+        m = re.search(r'<script type="application/json" id="' + STORE_TAG + r'">(.*?)</script>', text, re.S)
+        if not m:
+            die("That file has no map data inside. It may be an older copy from before backups were added; "
+                "ask for the newest Career Map file.")
+        raw = m.group(1).replace("<\\/", "</")
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as e:
+        die(f"The map data in that file is damaged ({e}).")
+    if not isinstance(data, dict) or "meta" not in data:
+        die("That doesn't look like a Career Wayfinder map.")
+    for k, v in empty_map().items():
+        data.setdefault(k, v)
+    os.makedirs(os.path.join(a.ws, ".wayfinder"), exist_ok=True)
+    if os.path.exists(store_path(a.ws)) and not a.force:
+        cur = load(a.ws)
+        if (cur["meta"].get("last_session") or "") > (data["meta"].get("last_session") or ""):
+            die(f"The map here (last session {cur['meta'].get('last_session')}) is newer than the backup "
+                f"({data['meta'].get('last_session')}). Add --force to replace it anyway.")
+    save(a.ws, data)
+    render(a.ws, data, quiet=True)
+    print(f"Restored: {len(data['industries'])} industries, {len(data['orgs'])} organisations, "
+          f"{len(data['people'])} people, {len(data['signals'])} reactions, {len(data['goals'])} goals "
+          f"(last session {data['meta'].get('last_session') or 'never'}).")
+
+
 def cmd_render(a):
     data = load(a.ws)
     render(a.ws, data)
@@ -895,16 +937,28 @@ def cmd_export(a):
 
 # ---------------------------------------------------------------- rendering
 
+STORE_TAG = "wayfinder-store"
+
+
 def render(ws, data, quiet=False):
     with open(os.path.join(ws, "My Map.md"), "w", encoding="utf-8") as f:
         f.write(render_md(data))
     payload = json.dumps(view_model(data, ws), ensure_ascii=False).replace("</", "<\\/")
     page = HTML.replace("__DATA__", payload).replace("__TITLE__", html.escape(
         (data["meta"].get("name") + "'s " if data["meta"].get("name") else "") + "Career Map"))
+    # The page carries her whole map so the file doubles as a backup (see `restore`).
+    store = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    page = page.replace("</body></html>", f'<script type="application/json" id="{STORE_TAG}">{store}</script></body></html>')
     with open(os.path.join(ws, "Career Map.html"), "w", encoding="utf-8") as f:
         f.write(page)
+    out = os.path.join(ws, "Career Map.html")
+    present = data["meta"].get("present_to")
+    if present and os.path.isdir(present) and os.path.abspath(present) != os.path.abspath(ws):
+        shutil.copyfile(out, os.path.join(present, "Career Map.html"))
+        out = os.path.join(present, "Career Map.html")
     if not quiet:
-        print(f"Wrote {os.path.join(ws, 'Career Map.html')} and My Map.md")
+        print(f"Wrote {out} and My Map.md")
+    return out
 
 
 def view_model(data, ws=None):
@@ -1176,6 +1230,7 @@ function side(){
   $('#side').innerHTML=`<div class="brand"><i></i>Career Wayfinder</div>
   <div class="card persona"><span class="av">${esc(initials(name))}</span><div><b>${esc(name)}'s map</b><small>Kept by ${esc(D.guide)}</small></div></div>
   <nav class="nav">${nav.map(([k,l,x])=>`<button class="${k===view?'on':''}" data-v="${k}" aria-current="${k===view?'page':'false'}"><svg viewBox="0 0 16 16" fill="none" style="color:${k===view?'var(--text)':'var(--muted)'}">${ICON[k]}</svg><span>${l}</span>${x}</button>`).join('')}</nav>
+  <div class="small muted" style="padding:2px 8px;font-size:11px;line-height:15px">Updated ${esc(D.generated)}${D.meta.mode==='web'?'. This file is also your backup: keep the newest copy.':''}</div>
   ${goals.length?`<div class="card goals"><div style="display:flex;justify-content:space-between"><span class="lbl">Your goals</span><span class="small" style="color:${worst[1]};font-weight:500">${worst[0]}</span></div>
    ${goals.map(g=>`<div class="goal"><div>${esc(g.text)}</div><div class="r"><div class="bar"><i style="width:${Math.max(g.pct,g.have?0:4)}%;background:${g.pace==='behind'||g.pace==='past due'?'var(--await)':'var(--accent)'}"></i></div><em>${g.have}/${g.target}</em></div></div>`).join('')}</div>`
    :`<div class="card goals" style="gap:8px"><span class="lbl">Your goals</span><div class="small">No goals yet. Once you've explored a little, you'll set two to four small ones together.</div><div><code class="mono" style="font-size:11px;color:var(--muted);background:var(--s2);border-radius:5px;padding:1px 6px">/my-goals</code></div></div>`}`;
@@ -1407,6 +1462,10 @@ def cmd_selftest(a):
     assert "hands-on lab" in st and "Follow up" in st and "TEST GUIDE" in st and "1/5" in st, st
     run("check", "--ws", ws)
     run("render", "--ws", ws)
+    ws2 = os.path.join(tmp, "restored")
+    os.makedirs(ws2)
+    run("restore", "--ws", ws2, os.path.join(ws, "Career Map.html"))
+    assert "TEST GUIDE" in run("status", "--ws", ws2), "restore lost data"
     assert os.path.exists(os.path.join(ws, "Career Map.html"))
     shutil.rmtree(tmp)
     print("✓ self-test passed")
@@ -1424,6 +1483,8 @@ def main():
     p = sub.add_parser("init", help="create the Career Wayfinder folder (safe to re-run)")
     p.add_argument("--folder", required=True)
     p.add_argument("--name", default="")
+    p.add_argument("--mode", choices=["desktop", "web"], default=None, help="web = claude.ai in a browser")
+    p.add_argument("--present-to", default="", help="also copy Career Map.html here on every render (web: the folder whose files she sees)")
     p.set_defaults(fn=cmd_init)
 
     p = sub.add_parser("add", help="add or merge items: kind = industry|role|org|person|question|agenda")
@@ -1487,6 +1548,12 @@ def main():
     p = sub.add_parser("check", help="consistency check (sources, links, resolutions)")
     ws(p)
     p.set_defaults(fn=cmd_check)
+
+    p = sub.add_parser("restore", help="rebuild the map from her newest Career Map.html (or a map.json)")
+    ws(p)
+    p.add_argument("source")
+    p.add_argument("--force", action="store_true", help="replace a map that looks newer than the backup")
+    p.set_defaults(fn=cmd_restore)
 
     p = sub.add_parser("render", help="rewrite Career Map.html and My Map.md")
     ws(p)

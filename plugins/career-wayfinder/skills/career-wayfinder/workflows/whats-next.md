@@ -34,7 +34,10 @@ The first time she asks, run `session --onboard plan`. Then run whichever she pi
 - Many messages sent with no replies: say plainly that 20–30% is a normal reply rate for cold notes, check that the template is short and in her voice, and suggest warm routes (alumni, friends of friends) for the next batch.
 - Nothing she likes yet: that's what wildcards and contrast cards are for. Run a fresh industry round with three wildcards.
 
-## Weekly scheduled scouting (offer once)
+## Weekly scheduled scouting (desktop only, offer once)
+
+Scheduled tasks need the Claude desktop app. In the browser, skip this section.
+
 
 Once she has at least three industries rated *drawn* or *curious*, offer once (and note the offer on the agenda so it isn't repeated):
 

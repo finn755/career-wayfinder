@@ -52,6 +52,11 @@ Her folder (`Career Wayfinder/`): `START HERE.md`, `Career Map.html` (BunkerOS d
 
 `python3 skills/career-wayfinder/scripts/wayfinder.py --help`. Python 3.9+, standard library only. Commands: `init`, `add`, `update`, `signal`, `import`, `find`, `show`, `status`, `session`, `check`, `render`, `export`, `selftest`. Every command except `init` and `selftest` takes `--ws` because Cowork's shell keeps no state.
 
+## Desktop or browser
+
+- **Browser (claude.ai):** no folder on her computer. The map lives in the conversation's working space, and every `Career Map.html` the guide hands her embeds the full map, so it doubles as her backup (`wayfinder.py restore <file>`). Research agents don't run in browser chats, so the guide researches in-chat on tight budgets. Gmail may be read-only. Details: `skills/career-wayfinder/references/browser-mode.md`.
+- **Desktop (Cowork):** the map lives in a Career Wayfinder folder on her computer; agents, scheduled scouting and Gmail drafts available.
+
 ## Install
 
 Cowork: **Customize › Plugins › Add marketplace**, paste `https://github.com/finn755/career-wayfinder`, then install **Career Wayfinder**. Or upload `career-wayfinder.plugin`.
